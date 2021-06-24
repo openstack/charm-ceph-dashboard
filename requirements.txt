@@ -1,0 +1,5 @@
+ops >= 1.2.0
+git+https://github.com/openstack/charms.ceph#egg=charms_ceph
+git+https://opendev.org/openstack/charm-ops-openstack#egg=ops_openstack
+#git+https://opendev.org/openstack/charm-ops-interface-tls-certificates#egg=interface_tls_certificates
+git+https://github.com/gnuoy/ops-interface-tls-certificates@no-exception-for-inflight-request#egg=interface_tls_certificates

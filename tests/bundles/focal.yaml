@@ -1,0 +1,39 @@
+local_overlay_enabled: False
+series: focal
+applications:
+  ceph-osd:
+    charm: cs:~openstack-charmers-next/ceph-osd
+    num_units: 6
+    storage:
+      osd-devices: 'cinder,10G'
+    options:
+      osd-devices: '/dev/test-non-existent'
+  ceph-mon:
+    charm: cs:~gnuoy/ceph-mon-26
+    num_units: 3
+    options:
+      monitor-count: '3'
+  vault:
+    num_units: 1
+    charm: cs:~openstack-charmers-next/vault
+  mysql-innodb-cluster:
+    charm: cs:~openstack-charmers-next/mysql-innodb-cluster-79
+    constraints: mem=3072M
+    num_units: 3
+  vault-mysql-router:
+    charm: cs:~openstack-charmers-next/mysql-router
+  ceph-dashboard:
+    charm: ../../ceph-dashboard.charm
+    options:
+      public-hostname: 'ceph-dashboard.zaza.local'
+relations:
+  - - 'ceph-osd:mon'
+    - 'ceph-mon:osd'
+  - - 'vault:shared-db'
+    - 'vault-mysql-router:shared-db'
+  - - 'vault-mysql-router:db-router'
+    - 'mysql-innodb-cluster:db-router'
+  - - 'ceph-dashboard:dashboard'
+    - 'ceph-mon:dashboard'
+  - - 'ceph-dashboard:certificates'
+    - 'vault:certificates'

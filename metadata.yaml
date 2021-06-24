@@ -1,0 +1,27 @@
+# Copyright 2021 Canonical
+# See LICENSE file for licensing details.
+name: ceph-dashboard
+display-name: Ceph Dashboard
+maintainer: OpenStack Charmers <openstack-discuss@lists.openstack.org>
+summary: Enable dashboard for Ceph
+description: |
+  Enable the ceph dashboard on the ceph mon units
+tags:
+- openstack
+- storage
+- backup
+extra-bindings:
+  public:
+subordinate: true
+series:
+- focal
+- groovy
+requires:
+  dashboard:
+    interface: ceph-dashboard
+    scope: container
+  certificates:
+    interface: tls-certificates
+  loadbalancer:
+    interface: api-endpoints
+
