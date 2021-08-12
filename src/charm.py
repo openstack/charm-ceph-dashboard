@@ -13,8 +13,9 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, StatusBase
 from ops.charm import ActionEvent
-from typing import List, Union
+from typing import List, Union, Tuple
 
+import base64
 import interface_tls_certificates.ca_client as ca_client
 import re
 import secrets
@@ -31,6 +32,8 @@ import charmhelpers.core.host as ch_host
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+TLS_Config = Tuple[Union[bytes, None], Union[bytes, None], Union[bytes, None]]
 
 
 class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
@@ -160,7 +163,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             self._on_ca_available)
         self.framework.observe(
             self.ca_client.on.tls_server_config_ready,
-            self._on_tls_server_config_ready)
+            self._configure_dashboard)
         self.framework.observe(self.on.add_user_action, self._add_user_action)
         self.ingress = interface_api_endpoints.APIEndpointsRequires(
             self,
@@ -243,6 +246,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         if self.unit.is_leader() and not ceph_utils.is_dashboard_enabled():
             ceph_utils.mgr_enable_dashboard()
         self._apply_ceph_config_from_charm_config()
+        self._configure_tls()
         ceph_utils.mgr_config_set(
             'mgr/dashboard/{hostname}/server_addr'.format(
                 hostname=socket.gethostname()),
@@ -254,24 +258,57 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         binding = self.model.get_binding('public')
         return str(binding.network.ingress_address)
 
-    def _on_tls_server_config_ready(self, _) -> None:
-        """Configure TLS."""
-        self.TLS_KEY_PATH.write_bytes(
-            self.ca_client.server_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.TraditionalOpenSSL,
-                encryption_algorithm=serialization.NoEncryption()))
-        self.TLS_CERT_PATH.write_bytes(
-            self.ca_client.server_certificate.public_bytes(
-                encoding=serialization.Encoding.PEM))
-        self.TLS_CA_CERT_PATH.write_bytes(
+    def _get_tls_from_config(self) -> TLS_Config:
+        """Extract TLS config from charm config."""
+        raw_key = self.config.get("ssl_key")
+        raw_cert = self.config.get("ssl_cert")
+        raw_ca_cert = self.config.get("ssl_ca")
+        if not (raw_key and raw_key):
+            return None, None, None
+        key = base64.b64decode(raw_key)
+        cert = base64.b64decode(raw_cert)
+        if raw_ca_cert:
+            ca_cert = base64.b64decode(raw_ca_cert)
+        else:
+            ca_cert = None
+        return key, cert, ca_cert
+
+    def _get_tls_from_relation(self) -> TLS_Config:
+        """Extract TLS config from certificatees relation."""
+        if not self.ca_client.is_server_cert_ready:
+            return None, None, None
+        key = self.ca_client.server_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption())
+        cert = self.ca_client.server_certificate.public_bytes(
+            encoding=serialization.Encoding.PEM)
+        ca_cert = (
             self.ca_client.ca_certificate.public_bytes(
                 encoding=serialization.Encoding.PEM) +
             self.ca_client.root_ca_chain.public_bytes(
                 encoding=serialization.Encoding.PEM))
+        return key, cert, ca_cert
+
+    def _configure_tls(self) -> None:
+        """Configure TLS."""
+        logging.debug("Attempting to collect TLS config from relation")
+        key, cert, ca_cert = self._get_tls_from_relation()
+        if not (key and cert):
+            logging.debug("Attempting to collect TLS config from charm "
+                          "config")
+            key, cert, ca_cert = self._get_tls_from_config()
+        if not (key and cert):
+            logging.warn(
+                "Not configuring TLS, not all data present")
+            return
+        self.TLS_KEY_PATH.write_bytes(key)
+        self.TLS_CERT_PATH.write_bytes(cert)
+        if ca_cert:
+            self.TLS_CA_CERT_PATH.write_bytes(ca_cert)
+            subprocess.check_call(['update-ca-certificates'])
 
         hostname = socket.gethostname()
-        subprocess.check_call(['update-ca-certificates'])
         ceph_utils.dashboard_set_ssl_certificate(
             self.TLS_CERT_PATH,
             hostname=hostname)

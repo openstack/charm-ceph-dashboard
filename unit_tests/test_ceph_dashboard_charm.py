@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import unittest
 import sys
 
@@ -345,22 +346,32 @@ class TestCephDashboardCharmBase(CharmTestCase):
             '10.0.0.10')
 
     @patch('socket.gethostname')
-    def test__on_tls_server_config_ready(self, _gethostname):
+    def test_certificates_relation(self, _gethostname):
+        self.ceph_utils.is_dashboard_enabled.return_value = True
         mock_TLS_KEY_PATH = MagicMock()
         mock_TLS_CERT_PATH = MagicMock()
         mock_TLS_CA_CERT_PATH = MagicMock()
         _gethostname.return_value = 'server1'
-        rel_id = self.harness.add_relation('certificates', 'vault')
+        cert_rel_id = self.harness.add_relation('certificates', 'vault')
+        dash_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
         self.harness.begin()
         self.harness.set_leader()
         self.harness.charm.TLS_CERT_PATH = mock_TLS_CERT_PATH
         self.harness.charm.TLS_CA_CERT_PATH = mock_TLS_CA_CERT_PATH
         self.harness.charm.TLS_KEY_PATH = mock_TLS_KEY_PATH
         self.harness.add_relation_unit(
-            rel_id,
+            dash_rel_id,
+            'ceph-mon/0')
+        self.harness.update_relation_data(
+            dash_rel_id,
+            'ceph-mon/0',
+            {
+                'mon-ready': 'True'})
+        self.harness.add_relation_unit(
+            cert_rel_id,
             'vault/0')
         self.harness.update_relation_data(
-            rel_id,
+            cert_rel_id,
             'vault/0',
             {
                 'ceph-dashboard_0.server.cert': TEST_CERT,
@@ -370,6 +381,45 @@ class TestCephDashboardCharmBase(CharmTestCase):
         mock_TLS_CERT_PATH.write_bytes.assert_called_once()
         mock_TLS_CA_CERT_PATH.write_bytes.assert_called_once()
         mock_TLS_KEY_PATH.write_bytes.assert_called_once()
+        self.subprocess.check_call.assert_called_once_with(
+            ['update-ca-certificates'])
+        self.ceph_utils.dashboard_set_ssl_certificate.assert_has_calls([
+            call(mock_TLS_CERT_PATH, hostname='server1'),
+            call(mock_TLS_CERT_PATH)])
+        self.ceph_utils.dashboard_set_ssl_certificate_key.assert_has_calls([
+            call(mock_TLS_KEY_PATH, hostname='server1'),
+            call(mock_TLS_KEY_PATH)])
+        self.ceph_utils.mgr_config_set.assert_has_calls([
+            call('mgr/dashboard/standby_behaviour', 'redirect'),
+            call('mgr/dashboard/ssl', 'true')])
+        self.ceph_utils.mgr_disable_dashboard.assert_called_once_with()
+        self.ceph_utils.mgr_enable_dashboard.assert_called_once_with()
+
+    def test_certificates_from_config(self):
+        self.ceph_utils.is_dashboard_enabled.return_value = True
+        mock_TLS_KEY_PATH = MagicMock()
+        mock_TLS_CERT_PATH = MagicMock()
+        mock_TLS_CA_CERT_PATH = MagicMock()
+        dash_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
+        self.harness.begin()
+        self.harness.set_leader()
+        self.harness.add_relation_unit(
+            dash_rel_id,
+            'ceph-mon/0')
+        self.harness.update_relation_data(
+            dash_rel_id,
+            'ceph-mon/0',
+            {
+                'mon-ready': 'True'})
+        self.harness.charm.TLS_CERT_PATH = mock_TLS_CERT_PATH
+        self.harness.charm.TLS_CA_CERT_PATH = mock_TLS_CA_CERT_PATH
+        self.harness.charm.TLS_KEY_PATH = mock_TLS_KEY_PATH
+        self.subprocess.check_call.reset_mock()
+        self.harness.update_config(
+            key_values={
+                'ssl_key': base64.b64encode(TEST_KEY.encode("utf-8")),
+                'ssl_cert': base64.b64encode(TEST_CERT.encode("utf-8")),
+                'ssl_ca': base64.b64encode(TEST_CA.encode("utf-8"))})
         self.subprocess.check_call.assert_called_once_with(
             ['update-ca-certificates'])
         self.ceph_utils.dashboard_set_ssl_certificate.assert_has_calls([
