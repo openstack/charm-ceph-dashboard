@@ -155,12 +155,19 @@ class TestCephDashboardCharmBase(CharmTestCase):
     PATCHES = [
         'ceph_utils',
         'socket',
-        'subprocess'
+        'subprocess',
+        'ch_host',
     ]
 
     def setUp(self):
         super().setUp(charm, self.PATCHES)
-        self.harness = Harness(
+        self.harness = self.get_harness()
+
+        self.socket.gethostname.return_value = 'server1'
+        self.socket.getfqdn.return_value = 'server1.local'
+
+    def get_harness(self):
+        _harness = Harness(
             _CephDashboardCharm,
         )
 
@@ -178,23 +185,77 @@ class TestCephDashboardCharmBase(CharmTestCase):
                     'egress-subnets': ['10.0.0.0/24']}
                 return network_data
 
-        self.harness._backend = _TestingOPSModelBackend(
-            self.harness._unit_name, self.harness._meta)
-        self.harness._model = model.Model(
-            self.harness._meta,
-            self.harness._backend)
-        self.harness._framework = framework.Framework(
+        _harness._backend = _TestingOPSModelBackend(
+            _harness._unit_name, _harness._meta)
+        _harness._model = model.Model(
+            _harness._meta,
+            _harness._backend)
+        _harness._framework = framework.Framework(
             ":memory:",
-            self.harness._charm_dir,
-            self.harness._meta,
-            self.harness._model)
+            _harness._charm_dir,
+            _harness._meta,
+            _harness._model)
         # END Workaround
-        self.socket.gethostname.return_value = 'server1'
-        self.socket.getfqdn.return_value = 'server1.local'
+        return _harness
 
     def test_init(self):
         self.harness.begin()
         self.assertFalse(self.harness.charm._stored.is_started)
+
+    def test_charm_config(self):
+        self.ceph_utils.is_dashboard_enabled.return_value = True
+        self.ch_host.cmp_pkgrevno.return_value = 0
+        basic_boolean = [
+            ('enable-password-policy', 'set-pwd-policy-enabled'),
+            ('password-policy-check-length',
+             'set-pwd-policy-check-length-enabled'),
+            ('password-policy-check-oldpwd',
+             'set-pwd-policy-check-oldpwd-enabled'),
+            ('password-policy-check-username',
+             'set-pwd-policy-check-username-enabled'),
+            ('password-policy-check-exclusion-list',
+             'set-pwd-policy-check-exclusion-list-enabled'),
+            ('password-policy-check-complexity',
+             'set-pwd-policy-check-complexity-enabled'),
+            ('password-policy-check-sequential-chars',
+             'set-pwd-policy-check-sequential-chars-enabled'),
+            ('password-policy-check-repetitive-chars',
+             'set-pwd-policy-check-repetitive-chars-enabled'),
+            ('audit-api-enabled',
+             'set-audit-api-enabled'),
+            ('audit-api-log-payload',
+             'set-audit-api-log-payload')]
+        expect = []
+        for charm_option, ceph_option in basic_boolean:
+            expect.append((charm_option, True, [ceph_option, 'True']))
+            expect.append((charm_option, False, [ceph_option, 'False']))
+        expect.extend([
+            ('debug', True, ['debug', 'enable']),
+            ('debug', False, ['debug', 'disable'])])
+        expect.extend([
+            ('motd', 'warning|5w|enough is enough', ['motd', 'warning', '5w',
+                                                     'enough is enough']),
+            ('motd', '', ['motd', 'clear'])])
+        base_cmd = ['ceph', 'dashboard']
+        for charm_option, charm_value, expected_options in expect:
+            _harness = self.get_harness()
+            rel_id = _harness.add_relation('dashboard', 'ceph-mon')
+            _harness.add_relation_unit(
+                rel_id,
+                'ceph-mon/0')
+            _harness.update_relation_data(
+                rel_id,
+                'ceph-mon/0',
+                {
+                    'mon-ready': 'True'})
+            _harness.begin()
+            expected_cmd = base_cmd + expected_options
+            self.subprocess.check_output.reset_mock()
+            _harness.update_config(
+                key_values={charm_option: charm_value})
+            self.subprocess.check_output.assert_called_once_with(
+                expected_cmd,
+                stderr=self.subprocess.STDOUT)
 
     def test__on_ca_available(self):
         rel_id = self.harness.add_relation('certificates', 'vault')

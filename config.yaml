@@ -2,9 +2,79 @@
 # See LICENSE file for licensing details.
 
 options:
+  debug:
+    type: boolean
+    default: False
+    description: |
+      Control debug mode. It is recommended that debug be disabled in
+      production deployments.
   public-hostname:
     type: string
     default:
     description: |
       The hostname or address of the public endpoints created for the
       dashboard
+  enable-password-policy:
+    type: boolean
+    default: True
+    description: Enable password policy
+  password-policy-check-length:
+    type: boolean
+    default: True
+    description: |
+      Reject password if it is shorter then password-policy-min-length
+  password-policy-check-oldpwd:
+    type: boolean
+    default: True
+    description: Reject password if it matches previous password.
+  password-policy-check-username:
+    type: boolean
+    default: True
+    description: Reject password if username is included in password.
+  password-policy-check-exclusion-list:
+    type: boolean
+    default: True
+    description: Reject password if it contains a word from a forbidden list.
+  password-policy-check-complexity:
+    type: boolean
+    default: True
+    description: |
+      Check password meets a complexity score of password-policy-min-complexity.
+      See https://docs.ceph.com/en/latest/mgr/dashboard/#password-policy
+  password-policy-check-sequential-chars:
+    type: boolean
+    default: True
+    description: |
+      Reject password if it contains a sequence of sequential characters. e.g.
+      a password containing '123' or 'efg' would be rejected.
+  password-policy-check-repetitive-chars:
+    type: boolean
+    default: True
+    description: |
+      Reject password if password contains consecutive repeating charachters.
+  password-policy-min-length:
+    type: int
+    default: 8
+    description: Set minimum password length.
+  password-policy-min-complexity:
+    type: int
+    default: 10
+    description: |
+      Set minimum password complexity score.
+      See https://docs.ceph.com/en/latest/mgr/dashboard/#password-policy
+  audit-api-enabled:
+    type: boolean
+    default: False
+    description: |
+        Log requests made to the dashboard REST API to the Ceph audit log.
+  audit-api-log-payload:
+    type: boolean
+    default: True
+    description: |
+      Include payload in Ceph audit logs. audit-api-enabled must be set to True
+      to enable this.,
+  motd:
+    type: string
+    default: ""
+    description: |
+        Message of the day settings. Should be in the format "severity|expires|message". Set to "" to disable.

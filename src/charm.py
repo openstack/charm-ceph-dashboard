@@ -13,6 +13,8 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, StatusBase
 from ops.charm import ActionEvent
+from typing import List, Union
+
 import interface_tls_certificates.ca_client as ca_client
 import re
 import secrets
@@ -24,6 +26,7 @@ import interface_dashboard
 import interface_api_endpoints
 import cryptography.hazmat.primitives.serialization as serialization
 import charms_ceph.utils as ceph_utils
+import charmhelpers.core.host as ch_host
 
 from pathlib import Path
 
@@ -43,6 +46,98 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
     TLS_CA_CERT_PATH = Path(
         '/usr/local/share/ca-certificates/vault_ca_cert_dashboard.crt')
     TLS_PORT = 8443
+
+    class CharmCephOption():
+        """Manage a charm option to ceph command to manage that option"""
+
+        def __init__(self, charm_option_name, ceph_option_name,
+                     min_version=None):
+            self.charm_option_name = charm_option_name
+            self.ceph_option_name = ceph_option_name
+            self.min_version = min_version
+
+        def is_supported(self) -> bool:
+            """Is the option supported on this unit"""
+            if self.min_version:
+                return self.minimum_supported(self.min_version)
+            return True
+
+        def minimum_supported(self, supported_version: str) -> bool:
+            """Check if installed Ceph release is >= to supported_version"""
+            return ch_host.cmp_pkgrevno('ceph-common', supported_version) < 1
+
+        def convert_option(self, value: Union[bool, str, int]) -> List[str]:
+            """Convert a value to the corresponding value part of the ceph
+               dashboard command"""
+            return [str(value)]
+
+        def ceph_command(self, value: List[str]) -> List[str]:
+            """Shell command to set option to desired value"""
+            cmd = ['ceph', 'dashboard', self.ceph_option_name]
+            cmd.extend(self.convert_option(value))
+            return cmd
+
+    class DebugOption(CharmCephOption):
+
+        def convert_option(self, value):
+            """Convert charm True/False to enable/disable"""
+            if value:
+                return ['enable']
+            else:
+                return ['disable']
+
+    class MOTDOption(CharmCephOption):
+
+        def convert_option(self, value):
+            """Split motd charm option into ['severity', 'time', 'message']"""
+            if value:
+                return value.split('|')
+            else:
+                return ['clear']
+
+    CHARM_TO_CEPH_OPTIONS = [
+        DebugOption('debug', 'debug'),
+        CharmCephOption(
+            'enable-password-policy',
+            'set-pwd-policy-enabled'),
+        CharmCephOption(
+            'password-policy-check-length',
+            'set-pwd-policy-check-length-enabled'),
+        CharmCephOption(
+            'password-policy-check-oldpwd',
+            'set-pwd-policy-check-oldpwd-enabled'),
+        CharmCephOption(
+            'password-policy-check-username',
+            'set-pwd-policy-check-username-enabled'),
+        CharmCephOption(
+            'password-policy-check-exclusion-list',
+            'set-pwd-policy-check-exclusion-list-enabled'),
+        CharmCephOption(
+            'password-policy-check-complexity',
+            'set-pwd-policy-check-complexity-enabled'),
+        CharmCephOption(
+            'password-policy-check-sequential-chars',
+            'set-pwd-policy-check-sequential-chars-enabled'),
+        CharmCephOption(
+            'password-policy-check-repetitive-chars',
+            'set-pwd-policy-check-repetitive-chars-enabled'),
+        CharmCephOption(
+            'password-policy-min-length',
+            'set-pwd-policy-min-length'),
+        CharmCephOption(
+            'password-policy-min-complexity',
+            'set-pwd-policy-min-complexity'),
+        CharmCephOption(
+            'audit-api-enabled',
+            'set-audit-api-enabled'),
+        CharmCephOption(
+            'audit-api-log-payload',
+            'set-audit-api-log-payload'),
+        MOTDOption(
+            'motd',
+            'motd',
+            min_version='15.2.14')
+    ]
 
     def __init__(self, *args) -> None:
         """Setup adapters and observers."""
@@ -113,6 +208,33 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         ceph_utils.mgr_disable_dashboard()
         ceph_utils.mgr_enable_dashboard()
 
+    def _run_cmd(self, cmd: List[str]) -> None:
+        """Run command in subprocess
+
+        `cmd` The command to run
+        """
+        try:
+            subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as exc:
+            logging.exception("Command failed: {}".format(exc.output))
+
+    def _apply_ceph_config_from_charm_config(self) -> None:
+        """Read charm config and apply settings to dashboard config"""
+        for option in self.CHARM_TO_CEPH_OPTIONS:
+            try:
+                value = self.config[option.charm_option_name]
+            except KeyError:
+                logging.error(
+                    "Unknown charm option {}, skipping".format(
+                        option.charm_option_name))
+                continue
+            if option.is_supported():
+                self._run_cmd(option.ceph_command(value))
+            else:
+                logging.warning(
+                    "Skipping charm option {}, not supported".format(
+                        option.charm_option_name))
+
     def _configure_dashboard(self, _) -> None:
         """Configure dashboard"""
         if not self.mon.mons_ready:
@@ -120,6 +242,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             return
         if self.unit.is_leader() and not ceph_utils.is_dashboard_enabled():
             ceph_utils.mgr_enable_dashboard()
+        self._apply_ceph_config_from_charm_config()
         ceph_utils.mgr_config_set(
             'mgr/dashboard/{hostname}/server_addr'.format(
                 hostname=socket.gethostname()),
