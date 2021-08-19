@@ -48,6 +48,9 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         """Setup adapters and observers."""
         super().__init__(*args)
         super().register_status_check(self.check_dashboard)
+        self.framework.observe(
+            self.on.config_changed,
+            self._configure_dashboard)
         self.mon = interface_dashboard.CephDashboardRequires(
             self,
             'dashboard')
@@ -112,6 +115,9 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
 
     def _configure_dashboard(self, _) -> None:
         """Configure dashboard"""
+        if not self.mon.mons_ready:
+            logging.info("Not configuring dashboard, mons not ready")
+            return
         if self.unit.is_leader() and not ceph_utils.is_dashboard_enabled():
             ceph_utils.mgr_enable_dashboard()
         ceph_utils.mgr_config_set(

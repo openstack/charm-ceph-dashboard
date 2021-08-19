@@ -96,3 +96,26 @@ class TestCephDashboardRequires(unittest.TestCase):
         self.assertEqual(
             self.harness.charm.seen_events,
             ['MonReadyEvent'])
+        self.assertTrue(
+            self.harness.charm.mon.mons_ready)
+
+    def test_on_changed_not_ready_unit(self):
+        self.harness.begin()
+        # No MonReadyEvent as relation is absent
+        self.assertEqual(
+            self.harness.charm.seen_events,
+            [])
+        rel_id = self.add_dashboard_relation()
+        # No MonReadyEvent as ceph-mon has not declared it is ready.
+        self.assertEqual(
+            self.harness.charm.seen_events,
+            [])
+        self.harness.update_relation_data(
+            rel_id,
+            'ceph-mon/0',
+            {})
+        self.assertEqual(
+            self.harness.charm.seen_events,
+            [])
+        self.assertFalse(
+            self.harness.charm.mon.mons_ready)

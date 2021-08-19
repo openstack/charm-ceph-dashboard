@@ -9,7 +9,7 @@ applications:
     options:
       osd-devices: '/dev/test-non-existent'
   ceph-mon:
-    charm: cs:~gnuoy/ceph-mon-26
+    charm: cs:~openstack-charmers-next/ceph-mon
     num_units: 3
     options:
       monitor-count: '3'

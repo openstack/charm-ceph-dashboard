@@ -239,9 +239,19 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.ceph_utils.mgr_enable_dashboard.assert_called_once_with()
 
     def test__configure_dashboard(self):
-        self.harness.begin()
-
         self.ceph_utils.is_dashboard_enabled.return_value = True
+        rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
+        self.harness.begin()
+        self.harness.add_relation_unit(
+            rel_id,
+            'ceph-mon/0')
+        self.harness.update_relation_data(
+            rel_id,
+            'ceph-mon/0',
+            {
+                'mon-ready': 'True'})
+
+        self.ceph_utils.mgr_config_set.reset_mock()
         self.harness.set_leader(False)
         self.harness.charm._configure_dashboard(None)
         self.assertFalse(self.ceph_utils.mgr_enable_dashboard.called)

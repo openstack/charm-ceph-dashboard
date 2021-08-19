@@ -31,12 +31,23 @@ class CephDashboardRequires(Object):
             charm.on[relation_name].relation_changed,
             self.on_changed)
 
+    @property
+    def mons_ready(self) -> bool:
+        """Check that all mons have reported ready."""
+        ready = False
+        if self.dashboard_relation:
+            # There will only be one unit as this is a subordinate relation.
+            for unit in self.dashboard_relation.units:
+                unit_data = self.dashboard_relation.data[unit]
+                if unit_data.get(self.READY_KEY) == 'True':
+                    ready = True
+        return ready
+
     def on_changed(self, event):
+        """Emit mon_ready if mons are ready."""
         logging.debug("CephDashboardRequires on_changed")
-        for u in self.dashboard_relation.units:
-            if self.dashboard_relation.data[u].get(self.READY_KEY) == 'True':
-                logging.debug("Emitting mon ready")
-                self.on.mon_ready.emit()
+        if self.mons_ready:
+            self.on.mon_ready.emit()
 
     @property
     def dashboard_relation(self):
