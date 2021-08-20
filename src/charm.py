@@ -25,6 +25,7 @@ import string
 import subprocess
 import tenacity
 import ops_openstack.plugins.classes
+import interface_ceph_iscsi_admin_access.admin_access as admin_access
 import interface_dashboard
 import interface_api_endpoints
 import interface_grafana_dashboard
@@ -166,6 +167,9 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             self,
             'radosgw-dashboard',
             request_system_role=True)
+        self.iscsi_user = admin_access.CephISCSIAdminAccessRequires(
+            self,
+            'iscsi-dashboard')
         self.framework.observe(
             self.mon.on.mon_ready,
             self._configure_dashboard)
@@ -177,6 +181,9 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             self._configure_dashboard)
         self.framework.observe(
             self.radosgw_user.on.gw_user_ready,
+            self._configure_dashboard)
+        self.framework.observe(
+            self.iscsi_user.on.admin_access_ready,
             self._configure_dashboard)
         self.framework.observe(self.on.add_user_action, self._add_user_action)
         self.ingress = interface_api_endpoints.APIEndpointsRequires(
@@ -350,12 +357,16 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         return self._run_cmd(cmd)
 
     def _apply_file_setting(self, ceph_setting: str,
-                            file_contents: str) -> str:
+                            file_contents: str,
+                            extra_args: List[str] = None) -> None:
         """Apply a setting via a file"""
         with tempfile.NamedTemporaryFile(mode='w', delete=True) as _file:
             _file.write(file_contents)
             _file.flush()
-            return self._apply_setting(ceph_setting, ['-i', _file.name])
+            settings = ['-i', _file.name]
+            if extra_args:
+                settings.extend(extra_args)
+            self._apply_setting(ceph_setting, settings)
 
     def _apply_ceph_config_from_charm_config(self) -> None:
         """Read charm config and apply settings to dashboard config"""
@@ -410,6 +421,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                     prometheus_ep])
         self._register_dashboards()
         self._manage_radosgw()
+        self._manage_iscsigw()
         self._stored.is_started = True
         self.update_status()
 
@@ -449,6 +461,28 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             self.ca_client.root_ca_chain.public_bytes(
                 encoding=serialization.Encoding.PEM))
         return key, cert, ca_cert
+
+    def _update_iscsigw_creds(self, creds):
+        self._apply_file_setting(
+            'iscsi-gateway-add',
+            '{}://{}:{}@{}:{}'.format(
+                creds['scheme'],
+                creds['username'],
+                creds['password'],
+                creds['host'],
+                creds['port']),
+            [creds['name']])
+
+    def _manage_iscsigw(self) -> None:
+        """Register rados gateways in dashboard db"""
+        if self.unit.is_leader():
+            creds = self.iscsi_user.get_user_creds()
+            if len(creds) < 1:
+                logging.info("No iscsi gateway creds found")
+                return
+            else:
+                for c in creds:
+                    self._update_iscsigw_creds(c)
 
     def _configure_tls(self) -> None:
         """Configure TLS."""

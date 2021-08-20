@@ -31,6 +31,8 @@ requires:
     interface: http
   radosgw-dashboard:
     interface: radosgw-user
+  iscsi-dashboard:
+    interface: ceph-iscsi-admin-access
 provides:
   grafana-dashboard:
     interface: grafana-dashboard
