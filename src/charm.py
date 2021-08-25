@@ -22,6 +22,7 @@ import secrets
 import socket
 import string
 import subprocess
+import tenacity
 import ops_openstack.plugins.classes
 import interface_dashboard
 import interface_api_endpoints
@@ -67,7 +68,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
 
         def minimum_supported(self, supported_version: str) -> bool:
             """Check if installed Ceph release is >= to supported_version"""
-            return ch_host.cmp_pkgrevno('ceph-common', supported_version) < 1
+            return ch_host.cmp_pkgrevno('ceph-common', supported_version) >= 0
 
         def convert_option(self, value: Union[bool, str, int]) -> List[str]:
             """Convert a value to the corresponding value part of the ceph
@@ -190,20 +191,46 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             sans.append(self.config.get('public-hostname'))
         self.ca_client.request_server_certificate(socket.getfqdn(), sans)
 
+    def _check_for_certs(self) -> bool:
+        """Check that charm has TLS data it needs"""
+        # Check charm config for TLS data
+        key, cert, _ = self._get_tls_from_config()
+        if key and cert:
+            return True
+        # Check relation for TLS data
+        try:
+            self.ca_client.server_key
+            return True
+        except ca_client.CAClientError:
+            return False
+
+    def _check_dashboard_responding(self) -> bool:
+        """Check the dashboard port is open"""
+
+        @tenacity.retry(wait=tenacity.wait_fixed(2),
+                        stop=tenacity.stop_after_attempt(30), reraise=True)
+        def _check_port(ip, port):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = sock.connect_ex((ip, port))
+            assert result == 0
+
+        try:
+            _check_port(self._get_bind_ip(), self.TLS_PORT)
+            return True
+        except AssertionError:
+            return False
+
     def check_dashboard(self) -> StatusBase:
         """Check status of dashboard"""
-        self._stored.is_started = ceph_utils.is_dashboard_enabled()
-        if self._stored.is_started:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex((self._get_bind_ip(), self.TLS_PORT))
-            if result == 0:
-                return ActiveStatus()
-            else:
-                return BlockedStatus(
-                    'Dashboard not responding')
-        else:
-            return BlockedStatus(
-                'Dashboard is not enabled')
+        checks = [
+            (ceph_utils.is_dashboard_enabled, 'Dashboard is not enabled'),
+            (self._check_for_certs, ('No certificates found. Please add a '
+                                     'certifcates relation or provide via '
+                                     'charm config')),
+            (self._check_dashboard_responding, 'Dashboard not responding')]
+        for check_f, msg in checks:
+            if not check_f():
+                return BlockedStatus(msg)
         return ActiveStatus()
 
     def kick_dashboard(self) -> None:
@@ -251,6 +278,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             'mgr/dashboard/{hostname}/server_addr'.format(
                 hostname=socket.gethostname()),
             str(self._get_bind_ip()))
+        self._stored.is_started = True
         self.update_status()
 
     def _get_bind_ip(self) -> str:

@@ -1,4 +1,5 @@
 ops >= 1.2.0
+tenacity
 git+https://github.com/openstack/charms.ceph#egg=charms_ceph
 git+https://opendev.org/openstack/charm-ops-openstack#egg=ops_openstack
 #git+https://opendev.org/openstack/charm-ops-interface-tls-certificates#egg=interface_tls_certificates

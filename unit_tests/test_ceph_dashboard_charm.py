@@ -281,6 +281,15 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.harness.begin()
         self.assertEqual(
             self.harness.charm.check_dashboard(),
+            BlockedStatus('No certificates found. Please add a certifcates '
+                          'relation or provide via charm config'))
+        self.harness.update_config(
+            key_values={
+                'ssl_key': base64.b64encode(TEST_KEY.encode("utf-8")),
+                'ssl_cert': base64.b64encode(TEST_CERT.encode("utf-8")),
+                'ssl_ca': base64.b64encode(TEST_CA.encode("utf-8"))})
+        self.assertEqual(
+            self.harness.charm.check_dashboard(),
             ActiveStatus())
 
         socket_mock.connect_ex.return_value = 1

@@ -17,3 +17,8 @@ import mock
 
 # Mock out secrets to make py35 happy.
 sys.modules['secrets'] = mock.MagicMock()
+
+# Tenacity decorators need to be mocked before import
+tenacity = mock.MagicMock()
+tenacity.retry.side_effect = lambda *args, **kwargs: lambda x: x
+sys.modules['tenacity'] = tenacity
