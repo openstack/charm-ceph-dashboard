@@ -6,6 +6,7 @@
 
 """Charm for the Ceph Dashboard."""
 
+import json
 import logging
 import tempfile
 
@@ -26,6 +27,8 @@ import tenacity
 import ops_openstack.plugins.classes
 import interface_dashboard
 import interface_api_endpoints
+import interface_grafana_dashboard
+import interface_http
 import cryptography.hazmat.primitives.serialization as serialization
 import charms_ceph.utils as ceph_utils
 import charmhelpers.core.host as ch_host
@@ -50,6 +53,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
     TLS_CA_CERT_PATH = Path(
         '/usr/local/share/ca-certificates/vault_ca_cert_dashboard.crt')
     TLS_PORT = 8443
+    DASH_DIR = Path('src/dashboards')
 
     class CharmCephOption():
         """Manage a charm option to ceph command to manage that option"""
@@ -176,7 +180,35 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                     'backend-port': self.TLS_PORT,
                     'backend-ip': self._get_bind_ip(),
                     'check-type': 'httpd'}]})
+        self.grafana_dashboard = \
+            interface_grafana_dashboard.GrafanaDashboardProvides(
+                self,
+                'grafana-dashboard')
+        self.alertmanager = interface_http.HTTPRequires(
+            self,
+            'alertmanager-service')
+        self.prometheus = interface_http.HTTPRequires(
+            self,
+            'prometheus')
+        self.framework.observe(
+            self.grafana_dashboard.on.dash_ready,
+            self._configure_dashboard)
+        self.framework.observe(
+            self.alertmanager.on.http_ready,
+            self._configure_dashboard)
+        self.framework.observe(
+            self.prometheus.on.http_ready,
+            self._configure_dashboard)
         self._stored.set_default(is_started=False)
+
+    def _register_dashboards(self) -> None:
+        """Register all dashboards with grafana"""
+        for dash_file in self.DASH_DIR.glob("*.json"):
+            self.grafana_dashboard.register_dashboard(
+                dash_file.stem,
+                json.loads(dash_file.read_text()))
+            logging.info(
+                "register_grafana_dashboard: {}".format(dash_file))
 
     def _on_ca_available(self, _) -> None:
         """Request TLS certificates."""
@@ -220,6 +252,13 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         except AssertionError:
             return False
 
+    def _check_grafana_config(self) -> bool:
+        """Check that garfana-api is set if the grafana is in use."""
+        if self.grafana_dashboard.dashboard_relation:
+            return bool(self.config.get('grafana-api-url'))
+        else:
+            return True
+
     def check_dashboard(self) -> StatusBase:
         """Check status of dashboard"""
         checks = [
@@ -227,6 +266,8 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             (self._check_for_certs, ('No certificates found. Please add a '
                                      'certifcates relation or provide via '
                                      'charm config')),
+            (self._check_grafana_config, 'Charm config option grafana-api-url '
+                                         'not set'),
             (self._check_dashboard_responding, 'Dashboard not responding')]
         for check_f, msg in checks:
             if not check_f():
@@ -278,6 +319,28 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             'mgr/dashboard/{hostname}/server_addr'.format(
                 hostname=socket.gethostname()),
             str(self._get_bind_ip()))
+        if self.unit.is_leader():
+            grafana_ep = self.config.get('grafana-api-url')
+            if grafana_ep:
+                self._run_cmd([
+                    'ceph', 'dashboard', 'set-grafana-api-url', grafana_ep])
+            alertmanager_conn = self.alertmanager.get_service_ep_data()
+            if alertmanager_conn:
+                alertmanager_ep = 'http://{}:{}'.format(
+                    alertmanager_conn['hostname'],
+                    alertmanager_conn['port'])
+                self._run_cmd([
+                    'ceph', 'dashboard', 'set-alertmanager-api-host',
+                    alertmanager_ep])
+            prometheus_conn = self.prometheus.get_service_ep_data()
+            if prometheus_conn:
+                prometheus_ep = 'http://{}:{}'.format(
+                    prometheus_conn['hostname'],
+                    prometheus_conn['port'])
+                self._run_cmd([
+                    'ceph', 'dashboard', 'set-prometheus-api-host',
+                    prometheus_ep])
+        self._register_dashboards()
         self._stored.is_started = True
         self.update_status()
 

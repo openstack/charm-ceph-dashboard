@@ -8,6 +8,11 @@ options:
     description: |
       Control debug mode. It is recommended that debug be disabled in
       production deployments.
+  grafana-api-url:
+    type: string
+    default:
+    description: |
+      URL of grafana api. The url must be using https.
   public-hostname:
     type: string
     default:

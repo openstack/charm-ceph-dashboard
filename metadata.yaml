@@ -24,4 +24,10 @@ requires:
     interface: tls-certificates
   loadbalancer:
     interface: api-endpoints
-
+  alertmanager-service:
+    interface: http
+  prometheus:
+    interface: http
+provides:
+  grafana-dashboard:
+    interface: grafana-dashboard

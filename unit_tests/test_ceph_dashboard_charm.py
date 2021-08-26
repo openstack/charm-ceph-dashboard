@@ -168,6 +168,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.socket.getfqdn.return_value = 'server1.local'
 
     def get_harness(self):
+        initial_config = {'grafana-api-url': None}
         _harness = Harness(
             _CephDashboardCharm,
         )
@@ -197,6 +198,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
             _harness._meta,
             _harness._model)
         # END Workaround
+        _harness.update_config(initial_config)
         return _harness
 
     def test_init(self):
@@ -302,6 +304,25 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.assertEqual(
             self.harness.charm.check_dashboard(),
             BlockedStatus('Dashboard is not enabled'))
+
+    def test_check_dashboard_grafana(self):
+        socket_mock = MagicMock()
+        self.socket.socket.return_value = socket_mock
+        socket_mock.connect_ex.return_value = 0
+        self.ceph_utils.is_dashboard_enabled.return_value = True
+        rel_id = self.harness.add_relation('grafana-dashboard', 'grafana')
+        self.harness.begin()
+        self.harness.add_relation_unit(
+            rel_id,
+            'grafana/0')
+        self.harness.update_config(
+            key_values={
+                'ssl_key': base64.b64encode(TEST_KEY.encode("utf-8")),
+                'ssl_cert': base64.b64encode(TEST_CERT.encode("utf-8")),
+                'ssl_ca': base64.b64encode(TEST_CA.encode("utf-8"))})
+        self.assertEqual(
+            self.harness.charm.check_dashboard(),
+            BlockedStatus('Charm config option grafana-api-url not set'))
 
     def test_kick_dashboard(self):
         self.harness.begin()

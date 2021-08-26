@@ -7,10 +7,20 @@ configure:
   - zaza.openstack.charm_tests.vault.setup.auto_initialize_no_validation
 tests:
   - zaza.openstack.charm_tests.ceph.dashboard.tests.CephDashboardTest
+  - zaza.openstack.charm_tests.ceph.tests.CephPrometheusTest
 target_deploy_status:
-  vault:
-    workload-status: blocked
-    workload-status-message: Vault needs to be initialized
   ceph-dashboard:
     workload-status: blocked
-    workload-status-message-prefix: No certificates found
+    workload-status-message-regex: "No certificates found|Charm config option"
+  vault:
+    workload-status: blocked
+    workload-status-message-prefix: Vault needs to be initialized
+  grafana:
+    workload-status: active
+    workload-status-message-prefix: Started
+  prometheus2:
+    workload-status: active
+    workload-status-message-prefix: Ready
+  telegraf:
+    workload-status: active
+    workload-status-message-prefix: Monitoring
