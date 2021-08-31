@@ -5,6 +5,7 @@ smoke_bundles:
   - focal
 configure:
   - zaza.openstack.charm_tests.vault.setup.auto_initialize_no_validation
+  - zaza.openstack.charm_tests.ceph.dashboard.setup.check_dashboard_cert
 tests:
   - zaza.openstack.charm_tests.ceph.dashboard.tests.CephDashboardTest
   - zaza.openstack.charm_tests.ceph.tests.CephPrometheusTest

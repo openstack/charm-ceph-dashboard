@@ -50,8 +50,9 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
     TLS_PUB_KEY_PATH = CEPH_CONFIG_PATH / 'ceph-dashboard-pub.key'
     TLS_CERT_PATH = CEPH_CONFIG_PATH / 'ceph-dashboard.crt'
     TLS_KEY_AND_CERT_PATH = CEPH_CONFIG_PATH / 'ceph-dashboard.pem'
-    TLS_CA_CERT_PATH = Path(
-        '/usr/local/share/ca-certificates/vault_ca_cert_dashboard.crt')
+    TLS_CA_CERT_DIR = Path('/usr/local/share/ca-certificates')
+    TLS_VAULT_CA_CERT_PATH = TLS_CA_CERT_DIR / 'vault_juju_ca_cert.crt'
+    TLS_CHARM_CA_CERT_PATH = TLS_CA_CERT_DIR / 'charm_config_juju_ca_cert.crt'
     TLS_PORT = 8443
     DASH_DIR = Path('src/dashboards')
 
@@ -385,10 +386,12 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         """Configure TLS."""
         logging.debug("Attempting to collect TLS config from relation")
         key, cert, ca_cert = self._get_tls_from_relation()
+        ca_cert_path = self.TLS_VAULT_CA_CERT_PATH
         if not (key and cert):
             logging.debug("Attempting to collect TLS config from charm "
                           "config")
             key, cert, ca_cert = self._get_tls_from_config()
+            ca_cert_path = self.TLS_CHARM_CA_CERT_PATH
         if not (key and cert):
             logging.warn(
                 "Not configuring TLS, not all data present")
@@ -396,7 +399,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         self.TLS_KEY_PATH.write_bytes(key)
         self.TLS_CERT_PATH.write_bytes(cert)
         if ca_cert:
-            self.TLS_CA_CERT_PATH.write_bytes(ca_cert)
+            ca_cert_path.write_bytes(ca_cert)
             subprocess.check_call(['update-ca-certificates'])
 
         hostname = socket.gethostname()

@@ -380,14 +380,14 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.ceph_utils.is_dashboard_enabled.return_value = True
         mock_TLS_KEY_PATH = MagicMock()
         mock_TLS_CERT_PATH = MagicMock()
-        mock_TLS_CA_CERT_PATH = MagicMock()
+        mock_TLS_VAULT_CA_CERT_PATH = MagicMock()
         _gethostname.return_value = 'server1'
         cert_rel_id = self.harness.add_relation('certificates', 'vault')
         dash_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
         self.harness.begin()
         self.harness.set_leader()
         self.harness.charm.TLS_CERT_PATH = mock_TLS_CERT_PATH
-        self.harness.charm.TLS_CA_CERT_PATH = mock_TLS_CA_CERT_PATH
+        self.harness.charm.TLS_VAULT_CA_CERT_PATH = mock_TLS_VAULT_CA_CERT_PATH
         self.harness.charm.TLS_KEY_PATH = mock_TLS_KEY_PATH
         self.harness.add_relation_unit(
             dash_rel_id,
@@ -409,7 +409,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
                 'chain': TEST_CHAIN,
                 'ca': TEST_CA})
         mock_TLS_CERT_PATH.write_bytes.assert_called_once()
-        mock_TLS_CA_CERT_PATH.write_bytes.assert_called_once()
+        mock_TLS_VAULT_CA_CERT_PATH.write_bytes.assert_called_once()
         mock_TLS_KEY_PATH.write_bytes.assert_called_once()
         self.subprocess.check_call.assert_called_once_with(
             ['update-ca-certificates'])
@@ -429,7 +429,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.ceph_utils.is_dashboard_enabled.return_value = True
         mock_TLS_KEY_PATH = MagicMock()
         mock_TLS_CERT_PATH = MagicMock()
-        mock_TLS_CA_CERT_PATH = MagicMock()
+        mock_TLS_CHARM_CA_CERT_PATH = MagicMock()
         dash_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
         self.harness.begin()
         self.harness.set_leader()
@@ -442,7 +442,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
             {
                 'mon-ready': 'True'})
         self.harness.charm.TLS_CERT_PATH = mock_TLS_CERT_PATH
-        self.harness.charm.TLS_CA_CERT_PATH = mock_TLS_CA_CERT_PATH
+        self.harness.charm.TLS_CHARM_CA_CERT_PATH = mock_TLS_CHARM_CA_CERT_PATH
         self.harness.charm.TLS_KEY_PATH = mock_TLS_KEY_PATH
         self.subprocess.check_call.reset_mock()
         self.harness.update_config(
