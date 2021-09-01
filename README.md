@@ -69,6 +69,14 @@ To enable Prometheus alerting, add the following relations:
     juju relate ceph-dashboard:alertmanager-service prometheus-alertmanager:alertmanager-service
     juju relate prometheus:alertmanager-service prometheus-alertmanager:alertmanager-service
 
+## Object Gateway
+
+To enable object gateway management add the following relation:
+
+    juju relate ceph-dashboard:radosgw-dashboard ceph-radosgw:radosgw-user
+
+NOTE: On Octopus or earlier the dashboard can only be related to one ceph-radosgw application.
+
 <!-- LINKS -->
 
 [ceph-dashboard]: https://docs.ceph.com/en/latest/mgr/dashboard/

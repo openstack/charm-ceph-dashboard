@@ -21,7 +21,7 @@ import sys
 sys.path.append('lib')  # noqa
 sys.path.append('src')  # noqa
 
-from mock import call, patch, MagicMock
+from mock import ANY, call, patch, MagicMock
 
 from ops.testing import Harness, _TestingModelBackend
 from ops.model import (
@@ -155,6 +155,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
 
     PATCHES = [
         'ceph_utils',
+        'ch_host',
         'socket',
         'subprocess',
         'ch_host',
@@ -463,6 +464,148 @@ class TestCephDashboardCharmBase(CharmTestCase):
             call('mgr/dashboard/ssl', 'true')])
         self.ceph_utils.mgr_disable_dashboard.assert_called_once_with()
         self.ceph_utils.mgr_enable_dashboard.assert_called_once_with()
+
+    def test_rados_gateway(self):
+        self.ceph_utils.is_dashboard_enabled.return_value = True
+        self.ch_host.cmp_pkgrevno.return_value = 1
+        mon_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
+        rel_id = self.harness.add_relation('radosgw-dashboard', 'ceph-radosgw')
+        self.harness.begin()
+        self.harness.set_leader()
+        self.harness.add_relation_unit(
+            mon_rel_id,
+            'ceph-mon/0')
+        self.harness.update_relation_data(
+            mon_rel_id,
+            'ceph-mon/0',
+            {
+                'mon-ready': 'True'})
+        self.harness.add_relation_unit(
+            rel_id,
+            'ceph-radosgw/0')
+        self.harness.add_relation_unit(
+            rel_id,
+            'ceph-radosgw/1')
+        self.harness.update_relation_data(
+            rel_id,
+            'ceph-radosgw/0',
+            {
+                'daemon-id': 'juju-80416c-zaza-7af97ef8a776-3'})
+        self.harness.update_relation_data(
+            rel_id,
+            'ceph-radosgw/1',
+            {
+                'daemon-id': 'juju-80416c-zaza-7af97ef8a776-4'})
+        self.harness.update_relation_data(
+            rel_id,
+            'ceph-radosgw',
+            {
+                'access-key': 'XNUZVPL364U0BL1OXWJZ',
+                'secret-key': 'SgBo115xJcW90nkQ5EaNQ6fPeyeUUT0GxhwQbLFo',
+                'uid': 'radosgw-user-9'})
+        self.subprocess.check_output.assert_has_calls([
+            call(['ceph', 'dashboard', 'set-rgw-api-access-key', '-i', ANY],
+                 stderr=self.subprocess.STDOUT),
+            call().decode('UTF-8'),
+            call(['ceph', 'dashboard', 'set-rgw-api-secret-key', '-i', ANY],
+                 stderr=self.subprocess.STDOUT),
+            call().decode('UTF-8'),
+        ])
+
+    def test_rados_gateway_multi_relations_pacific(self):
+        self.ceph_utils.is_dashboard_enabled.return_value = True
+        self.ch_host.cmp_pkgrevno.return_value = 1
+        rel_id1 = self.harness.add_relation('radosgw-dashboard', 'ceph-eu')
+        rel_id2 = self.harness.add_relation('radosgw-dashboard', 'ceph-us')
+        mon_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
+        self.harness.begin()
+        self.harness.set_leader()
+        self.harness.add_relation_unit(
+            mon_rel_id,
+            'ceph-mon/0')
+        self.harness.update_relation_data(
+            mon_rel_id,
+            'ceph-mon/0',
+            {
+                'mon-ready': 'True'})
+        self.harness.add_relation_unit(
+            rel_id1,
+            'ceph-eu/0')
+        self.harness.add_relation_unit(
+            rel_id2,
+            'ceph-us/0')
+        self.harness.update_relation_data(
+            rel_id1,
+            'ceph-eu/0',
+            {
+                'daemon-id': 'juju-80416c-zaza-7af97ef8a776-3'})
+        self.harness.update_relation_data(
+            rel_id2,
+            'ceph-us/0',
+            {
+                'daemon-id': 'juju-dddddd-zaza-sdfsfsfs-4'})
+        self.harness.update_relation_data(
+            rel_id1,
+            'ceph-eu',
+            {
+                'access-key': 'XNUZVPL364U0BL1OXWJZ',
+                'secret-key': 'SgBo115xJcW90nkQ5EaNQ6fPeyeUUT0GxhwQbLFo',
+                'uid': 'radosgw-user-9'})
+        self.subprocess.check_output.reset_mock()
+        self.harness.update_relation_data(
+            rel_id2,
+            'ceph-us',
+            {
+                'access-key': 'JGHKJGDKJGJGJHGYYYYM',
+                'secret-key': 'iljkdfhHKHKd88LKxNLSKDiijfjfjfldjfjlf44',
+                'uid': 'radosgw-user-10'})
+        self.subprocess.check_output.assert_has_calls([
+            call(['ceph', 'dashboard', 'set-rgw-api-access-key', '-i', ANY],
+                 stderr=self.subprocess.STDOUT),
+            call().decode('UTF-8'),
+            call(['ceph', 'dashboard', 'set-rgw-api-secret-key', '-i', ANY],
+                 stderr=self.subprocess.STDOUT),
+            call().decode('UTF-8'),
+        ])
+
+    def test_rados_gateway_multi_relations_octopus(self):
+        self.ch_host.cmp_pkgrevno.return_value = -1
+        rel_id1 = self.harness.add_relation('radosgw-dashboard', 'ceph-eu')
+        rel_id2 = self.harness.add_relation('radosgw-dashboard', 'ceph-us')
+        self.harness.begin()
+        self.harness.set_leader()
+        self.harness.add_relation_unit(
+            rel_id1,
+            'ceph-eu/0')
+        self.harness.add_relation_unit(
+            rel_id2,
+            'ceph-us/0')
+        self.harness.update_relation_data(
+            rel_id1,
+            'ceph-eu/0',
+            {
+                'daemon-id': 'juju-80416c-zaza-7af97ef8a776-3'})
+        self.harness.update_relation_data(
+            rel_id2,
+            'ceph-us/0',
+            {
+                'daemon-id': 'juju-dddddd-zaza-sdfsfsfs-4'})
+        self.harness.update_relation_data(
+            rel_id1,
+            'ceph-eu',
+            {
+                'access-key': 'XNUZVPL364U0BL1OXWJZ',
+                'secret-key': 'SgBo115xJcW90nkQ5EaNQ6fPeyeUUT0GxhwQbLFo',
+                'uid': 'radosgw-user-9'})
+        self.subprocess.check_output.reset_mock()
+        self.harness.update_relation_data(
+            rel_id2,
+            'ceph-us',
+            {
+                'access-key': 'JGHKJGDKJGJGJHGYYYYM',
+                'secret-key': 'iljkdfhHKHKd88LKxNLSKDiijfjfjfldjfjlf44',
+                'uid': 'radosgw-user-10'})
+        self.assertFalse(self.subprocess.check_output.called)
 
     @patch.object(charm.secrets, 'choice')
     def test__gen_user_password(self, _choice):

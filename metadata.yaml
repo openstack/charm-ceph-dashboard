@@ -16,6 +16,7 @@ subordinate: true
 series:
 - focal
 - groovy
+- hirsute
 requires:
   dashboard:
     interface: ceph-dashboard
@@ -28,6 +29,8 @@ requires:
     interface: http
   prometheus:
     interface: http
+  radosgw-dashboard:
+    interface: radosgw-user
 provides:
   grafana-dashboard:
     interface: grafana-dashboard

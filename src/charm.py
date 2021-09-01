@@ -29,6 +29,7 @@ import interface_dashboard
 import interface_api_endpoints
 import interface_grafana_dashboard
 import interface_http
+import interface_radosgw_user
 import cryptography.hazmat.primitives.serialization as serialization
 import charms_ceph.utils as ceph_utils
 import charmhelpers.core.host as ch_host
@@ -161,6 +162,10 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         self.ca_client = ca_client.CAClient(
             self,
             'certificates')
+        self.radosgw_user = interface_radosgw_user.RadosGWUserRequires(
+            self,
+            'radosgw-dashboard',
+            request_system_role=True)
         self.framework.observe(
             self.mon.on.mon_ready,
             self._configure_dashboard)
@@ -169,6 +174,9 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             self._on_ca_available)
         self.framework.observe(
             self.ca_client.on.tls_server_config_ready,
+            self._configure_dashboard)
+        self.framework.observe(
+            self.radosgw_user.on.gw_user_ready,
             self._configure_dashboard)
         self.framework.observe(self.on.add_user_action, self._add_user_action)
         self.ingress = interface_api_endpoints.APIEndpointsRequires(
@@ -210,6 +218,50 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                 json.loads(dash_file.read_text()))
             logging.info(
                 "register_grafana_dashboard: {}".format(dash_file))
+
+    def _update_legacy_radosgw_creds(self, access_key: str,
+                                     secret_key: str) -> None:
+        """Update dashboard db with access & secret key for rados gateways.
+
+        This method uses the legacy format which only supports one gateway.
+        """
+        self._apply_file_setting('set-rgw-api-access-key', access_key)
+        self._apply_file_setting('set-rgw-api-secret-key', secret_key)
+
+    def _update_multi_radosgw_creds(self, creds: str) -> None:
+        """Update dashboard db with access & secret key for rados gateway."""
+        access_keys = {c['daemon_id']: c['access_key'] for c in creds}
+        secret_keys = {c['daemon_id']: c['secret_key'] for c in creds}
+        self._apply_file_setting(
+            'set-rgw-api-access-key',
+            json.dumps(access_keys))
+        self._apply_file_setting(
+            'set-rgw-api-secret-key',
+            json.dumps(secret_keys))
+
+    def _support_multiple_gateways(self) -> bool:
+        """Check if version of dashboard supports multiple rados gateways"""
+        return ch_host.cmp_pkgrevno('ceph-common', '16.0') > 0
+
+    def _manage_radosgw(self) -> None:
+        """Register rados gateways in dashboard db"""
+        if self.unit.is_leader():
+            creds = self.radosgw_user.get_user_creds()
+            if len(creds) < 1:
+                logging.info("No object gateway creds found")
+                return
+            if self._support_multiple_gateways():
+                self._update_multi_radosgw_creds(creds)
+            else:
+                if len(creds) > 1:
+                    logging.error(
+                        "Cannot enable object gateway support. Ceph release "
+                        "does not support multiple object gateways in the "
+                        "dashboard")
+                else:
+                    self._update_legacy_radosgw_creds(
+                        creds[0]['access_key'],
+                        creds[0]['secret_key'])
 
     def _on_ca_available(self, _) -> None:
         """Request TLS certificates."""
@@ -280,15 +332,30 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         ceph_utils.mgr_disable_dashboard()
         ceph_utils.mgr_enable_dashboard()
 
-    def _run_cmd(self, cmd: List[str]) -> None:
+    def _run_cmd(self, cmd: List[str]) -> str:
         """Run command in subprocess
 
         `cmd` The command to run
         """
         try:
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            return output.decode('UTF-8')
         except subprocess.CalledProcessError as exc:
             logging.exception("Command failed: {}".format(exc.output))
+
+    def _apply_setting(self, ceph_setting: str, value: List[str]) -> str:
+        """Apply a dashboard setting"""
+        cmd = ['ceph', 'dashboard', ceph_setting]
+        cmd.extend(value)
+        return self._run_cmd(cmd)
+
+    def _apply_file_setting(self, ceph_setting: str,
+                            file_contents: str) -> str:
+        """Apply a setting via a file"""
+        with tempfile.NamedTemporaryFile(mode='w', delete=True) as _file:
+            _file.write(file_contents)
+            _file.flush()
+            return self._apply_setting(ceph_setting, ['-i', _file.name])
 
     def _apply_ceph_config_from_charm_config(self) -> None:
         """Read charm config and apply settings to dashboard config"""
@@ -342,6 +409,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                     'ceph', 'dashboard', 'set-prometheus-api-host',
                     prometheus_ep])
         self._register_dashboards()
+        self._manage_radosgw()
         self._stored.is_started = True
         self.update_status()
 

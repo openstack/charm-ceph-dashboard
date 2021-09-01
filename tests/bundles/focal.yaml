@@ -47,6 +47,9 @@ applications:
   prometheus-alertmanager:
     charm: cs:prometheus-alertmanager
     num_units: 1
+  ceph-radosgw:
+    charm: cs:~openstack-charmers-next/ceph-radosgw
+    num_units: 3
 relations:
   - - 'ceph-osd:mon'
     - 'ceph-mon:osd'
@@ -80,3 +83,9 @@ relations:
     - 'prometheus:website'
   - - 'prometheus:alertmanager-service'
     - 'prometheus-alertmanager:alertmanager-service'
+  - - 'ceph-radosgw:mon'
+    - 'ceph-mon:radosgw'
+  - - 'ceph-radosgw:certificates'
+    - 'vault:certificates'
+  - - 'ceph-dashboard:radosgw-dashboard'
+    - 'ceph-radosgw:radosgw-user'
