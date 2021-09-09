@@ -1,15 +1,37 @@
 # Overview
 
-The ceph-dashboard configures the [Ceph Dashboard][ceph-dashboard-upstream].
-The charm is intended to be used in conjunction with the
-[ceph-mon][ceph-mon-charm] charm.
+The ceph-dashboard charm deploys the [Ceph Dashboard][upstream-ceph-dashboard],
+a built-in web-based Ceph management and monitoring application.
 
 # Usage
 
 ## Configuration
 
-See file `config.yaml` for the full list of options, along with their
-descriptions and default values.
+This section covers common and/or important configuration options. See file
+`config.yaml` for the full list of options, along with their descriptions and
+default values. See the [Juju documentation][juju-docs-config-apps] for details
+on configuring applications.
+
+#### `grafana-api-url`
+
+Sets the url of the grafana api when using embedded graphs. See
+[Embedded Grafana Dashboards](#Embedded-Grafana-Dashboards)
+
+#### `public-hostname`
+
+Sets the hostname or address of the public endpoint used to access
+the dashboard.
+
+#### `enable-password-policy`
+
+Sets whether certain password restrictions are enforced when a user
+is created or changes their password.
+
+#### `password-*`
+
+There are a number of `password-*` options which impose constraints
+on which passwords can be used. These options are ignored unless
+`enable-password-policy` is set to `True`.
 
 ## Deployment
 
@@ -18,42 +40,64 @@ We are assuming a pre-existing Ceph cluster.
 Deploy the ceph-dashboard as a subordinate to the ceph-mon charm.
 
     juju deploy ceph-dashboard
-    juju relate ceph-dashboard ceph-mon
+    juju add-relation ceph-dashboard:dashboard ceph-mon:dashboard
+
+
+TLS is a requirement for this charm. Enable it by adding a relation to the
+vault application:
+
+    juju add-relation ceph-dashboard:certificates vault:certificates
+
+See [Managing TLS certificates][cdg-tls] in the
+[OpenStack Charms Deployment Guide][cdg] for more information on TLS.
+
+> **Note**: This charm also supports TLS configuration via charm options
+  `ssl_cert`, `ssl_key`, and `ssl_ca`.
+
 
 ## Embedded Grafana Dashboards
 
 To enable the embedded grafana dashboards within the Ceph dashboard
 some additional relations are needed.
 
-    juju relate ceph-dashboard:grafana-dashboard grafana:dashboards
-    juju relate ceph-dashboard:prometheus prometheus:website
-    juju relate ceph-mon:prometheus prometheus:target
-    juju relate ceph-osd:juju-info telegraf:juju-info
-    juju relate ceph-mon:juju-info telegraf:juju-info
+    juju add-relation ceph-dashboard:grafana-dashboard grafana:dashboards
+    juju add-relation ceph-dashboard:prometheus prometheus:website
+    juju add-relation ceph-mon:prometheus prometheus:target
+    juju add-relation ceph-osd:juju-info telegraf:juju-info
+    juju add-relation ceph-mon:juju-info telegraf:juju-info
 
 Grafana, Telegraf and Prometheus should be related in the standard way
 
-    juju relate grafana:grafana-source prometheus:grafana-source
-    juju relate telegraf:prometheus-client prometheus:target
-    juju relate telegraf:dashboards grafana:dashboards
+    juju add-relation grafana:grafana-source prometheus:grafana-source
+    juju add-relation telegraf:prometheus-client prometheus:target
+    juju add-relation telegraf:dashboards grafana:dashboards
 
-Grafana must be using https so either supply a certificates and key via
-the ssl\_\* charm config options or add a vault relation.
 
-    juju deploy grafana:certificates vault:certificates
+When Grafana is integrated with the Ceph Dashboard it requires TLS, so
+add a relation to Vault (the grafana charm also supports TLS configuration via
+ssl\_\* charm options):
+
+    juju add-relation grafana:certificates vault:certificates
 
 Grafana should be set with the following charm options:
 
     juju config grafana anonymous=True
     juju config grafana allow_embedding=True
+
+The grafana charm also requires the vonage-status-panel and
+grafana-piechart-panel plugins. The Grafana charm `install_plugins`
+config option should be set to include URLs from which these plugins
+can be downloaded. They are currently available from 
+https://storage.googleapis.com/plugins-community. For example:
+
     juju config grafana install_plugins="https://storage.googleapis.com/plugins-community/vonage-status-panel/release/1.0.11/vonage-status-panel-1.0.11.zip,https://storage.googleapis.com/plugins-community/grafana-piechart-panel/release/1.6.2/grafana-piechart-panel-1.6.2.zip"
 
 Telegraf should be set with the following charm options:
 
     juju config telegraf hostname="{host}"
 
-NOTE: That is "{host}" verbatim, nothing needs to be substituted.
-
+> **Note**: The above command is to be invoked verbatim; no substitution is
+required.
 
 Currently the dashboard cannot autodect the api endpoint of the grafana
 service, so the end of the deployment run the following:
@@ -64,12 +108,40 @@ service, so the end of the deployment run the following:
 
 To enable Prometheus alerting, add the following relations:
 
-    juju relate ceph-dashboard:prometheus prometheus:website
-    juju relate ceph-mon:prometheus prometheus:target
-    juju relate ceph-dashboard:alertmanager-service prometheus-alertmanager:alertmanager-service
-    juju relate prometheus:alertmanager-service prometheus-alertmanager:alertmanager-service
+    juju add-relation ceph-dashboard:prometheus prometheus:website
+    juju add-relation ceph-mon:prometheus prometheus:target
+    juju add-relation ceph-dashboard:alertmanager-service prometheus-alertmanager:alertmanager-service
+    juju add-relation prometheus:alertmanager-service prometheus-alertmanager:alertmanager-service
+
+## Actions
+
+This section lists Juju [actions][juju-docs-actions] supported by the charm.
+Actions allow specific operations to be performed on a per-unit basis. To
+display action descriptions run `juju actions --schema add-user`. If the charm
+is not deployed then see file `actions.yaml`.
+
+* `add-user`
+* `delete-user`
+
+# Documentation
+
+The OpenStack Charms project maintains two documentation guides:
+
+* [OpenStack Charm Guide][cg]: for project information, including development
+  and support notes
+* [OpenStack Charms Deployment Guide][cdg]: for charm usage information
+
+
+# Bugs
+
+Please report bugs on [Launchpad][lp-bugs-charm-ceph-dashboard].
 
 <!-- LINKS -->
 
-[ceph-dashboard]: https://docs.ceph.com/en/latest/mgr/dashboard/
-[ceph-mon-charm]: https://jaas.ai/ceph-mon
+[juju-docs-actions]: https://juju.is/docs/working-with-actions
+[juju-docs-config-apps]: https://juju.is/docs/configuring-applications
+[upstream-ceph-dashboard]: https://docs.ceph.com/en/latest/mgr/dashboard/
+[cg]: https://docs.openstack.org/charm-guide
+[cdg]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide
+[cdg-tls]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/app-certificate-management.html
+[lp-bugs-charm-ceph-dashboard]: https://bugs.launchpad.net/charm-ceph-dashboard
