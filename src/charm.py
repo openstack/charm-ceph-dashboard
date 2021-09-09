@@ -492,9 +492,11 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                 self.TLS_KEY_PATH)
         self.kick_dashboard()
 
-    def _gen_user_password(self, length: int = 8) -> str:
+    def _gen_user_password(self, length: int = 12) -> str:
         """Generate a password"""
-        alphabet = string.ascii_letters + string.digits
+        alphabet = (
+            string.ascii_lowercase + string.ascii_uppercase + string.digits)
+
         return ''.join(secrets.choice(alphabet) for i in range(length))
 
     def _add_user_action(self, event: ActionEvent) -> None:

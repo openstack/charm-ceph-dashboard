@@ -613,7 +613,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
         _choice.return_value = 'r'
         self.assertEqual(
             self.harness.charm._gen_user_password(),
-            'rrrrrrrr')
+            'rrrrrrrrrrrr')
 
     @patch.object(charm.tempfile, 'NamedTemporaryFile')
     @patch.object(charm.secrets, 'choice')
