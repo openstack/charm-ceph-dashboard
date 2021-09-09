@@ -50,6 +50,9 @@ applications:
   ceph-radosgw:
     charm: cs:~openstack-charmers-next/ceph-radosgw
     num_units: 3
+  ceph-fs:
+    charm: cs:~openstack-charmers-next/ceph-fs
+    num_units: 1
 relations:
   - - 'ceph-osd:mon'
     - 'ceph-mon:osd'
@@ -89,3 +92,5 @@ relations:
     - 'vault:certificates'
   - - 'ceph-dashboard:radosgw-dashboard'
     - 'ceph-radosgw:radosgw-user'
+  - - 'ceph-mon:mds'
+    - 'ceph-fs:ceph-mds'

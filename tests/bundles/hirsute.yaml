@@ -38,6 +38,9 @@ applications:
     options:
       pool-prefix: west
       region: west
+  ceph-fs:
+    charm: cs:~openstack-charmers-next/ceph-fs
+    num_units: 1
 relations:
   - - 'ceph-osd:mon'
     - 'ceph-mon:osd'
@@ -61,3 +64,5 @@ relations:
     - 'vault:certificates'
   - - 'ceph-dashboard:radosgw-dashboard'
     - 'ceph-radosgw-west:radosgw-user'
+  - - 'ceph-mon:mds'
+    - 'ceph-fs:ceph-mds'
