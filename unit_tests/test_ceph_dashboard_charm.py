@@ -630,3 +630,14 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.subprocess.check_output.assert_called_once_with(
             ['ceph', 'dashboard', 'ac-user-create', '--enabled',
              '-i', 'tempfilename', 'auser', 'administrator'])
+
+    def test__delete_user_action(self):
+        self.subprocess.check_output.return_value = b''
+        self.harness.begin()
+        action_event = MagicMock()
+        action_event.params = {
+            'username': 'auser'}
+        self.harness.charm._delete_user_action(action_event)
+        self.subprocess.check_output.assert_called_once_with(
+            ['ceph', 'dashboard', 'ac-user-delete', 'auser'],
+            stderr=self.subprocess.STDOUT)

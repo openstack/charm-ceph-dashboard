@@ -12,3 +12,10 @@ add-user:
       description: Role to give user
       type: string
       default: ""
+delete-user:
+  description: delete a dashboard user
+  params:
+    username:
+      description: Name of user to delete
+      type: string
+      default: ""

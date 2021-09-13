@@ -179,6 +179,9 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             self.radosgw_user.on.gw_user_ready,
             self._configure_dashboard)
         self.framework.observe(self.on.add_user_action, self._add_user_action)
+        self.framework.observe(
+            self.on.delete_user_action,
+            self._delete_user_action)
         self.ingress = interface_api_endpoints.APIEndpointsRequires(
             self,
             'loadbalancer',
@@ -517,6 +520,16 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                     event.fail("User already exists")
                 else:
                     event.set_results({"password": password})
+
+    def _delete_user_action(self, event: ActionEvent) -> None:
+        """Delete a user"""
+        username = event.params["username"]
+        try:
+            self._run_cmd(['ceph', 'dashboard', 'ac-user-delete', username])
+            event.set_results({"message": "User {} deleted".format(username)})
+        except subprocess.CalledProcessError as exc:
+            event.fail(exc.output)
+
 
 if __name__ == "__main__":
     main(CephDashboardCharm)
