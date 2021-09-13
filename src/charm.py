@@ -18,6 +18,7 @@ from typing import List, Union, Tuple
 
 import base64
 import interface_tls_certificates.ca_client as ca_client
+import interface_openstack_loadbalancer.loadbalancer as ops_lb_interface
 import re
 import secrets
 import socket
@@ -27,7 +28,6 @@ import tenacity
 import ops_openstack.plugins.classes
 import interface_ceph_iscsi_admin_access.admin_access as admin_access
 import interface_dashboard
-import interface_api_endpoints
 import interface_grafana_dashboard
 import interface_http
 import interface_radosgw_user
@@ -57,6 +57,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
     TLS_CHARM_CA_CERT_PATH = TLS_CA_CERT_DIR / 'charm_config_juju_ca_cert.crt'
     TLS_PORT = 8443
     DASH_DIR = Path('src/dashboards')
+    LB_SERVICE_NAME = "ceph-dashboard"
 
     class CharmCephOption():
         """Manage a charm option to ceph command to manage that option"""
@@ -175,7 +176,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             self._configure_dashboard)
         self.framework.observe(
             self.ca_client.on.ca_available,
-            self._on_ca_available)
+            self._configure_dashboard)
         self.framework.observe(
             self.ca_client.on.tls_server_config_ready,
             self._configure_dashboard)
@@ -189,16 +190,9 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         self.framework.observe(
             self.on.delete_user_action,
             self._delete_user_action)
-        self.ingress = interface_api_endpoints.APIEndpointsRequires(
+        self.ingress = ops_lb_interface.OSLoadbalancerRequires(
             self,
-            'loadbalancer',
-            {
-                'endpoints': [{
-                    'service-type': 'ceph-dashboard',
-                    'frontend-port': self.TLS_PORT,
-                    'backend-port': self.TLS_PORT,
-                    'backend-ip': self._get_bind_ip(),
-                    'check-type': 'httpd'}]})
+            'loadbalancer')
         self.grafana_dashboard = \
             interface_grafana_dashboard.GrafanaDashboardProvides(
                 self,
@@ -218,7 +212,22 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         self.framework.observe(
             self.prometheus.on.http_ready,
             self._configure_dashboard)
+        self.framework.observe(
+            self.ingress.on.lb_relation_ready,
+            self._request_loadbalancer)
+        self.framework.observe(
+            self.ingress.on.lb_configured,
+            self._configure_dashboard)
         self._stored.set_default(is_started=False)
+
+    def _request_loadbalancer(self, _) -> None:
+        """Send request to create loadbalancer"""
+        self.ingress.request_loadbalancer(
+            self.LB_SERVICE_NAME,
+            self.TLS_PORT,
+            self.TLS_PORT,
+            self._get_bind_ip(),
+            'httpd')
 
     def _register_dashboards(self) -> None:
         """Register all dashboards with grafana"""
@@ -273,9 +282,24 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                         creds[0]['access_key'],
                         creds[0]['secret_key'])
 
-    def _on_ca_available(self, _) -> None:
+    def request_certificates(self) -> None:
         """Request TLS certificates."""
+        if not self.ca_client.is_joined:
+            logging.debug(
+                "Cannot request certificates, relation not present.")
+            return
         addresses = set()
+        if self.ingress.relations:
+            lb_response = self.ingress.get_frontend_data()
+            if lb_response:
+                lb_config = lb_response[self.LB_SERVICE_NAME]
+                addresses.update(
+                    [i for d in lb_config.values() for i in d['ip']])
+            else:
+                logging.debug(
+                    ("Defering certificate request until loadbalancer has "
+                     "responded."))
+                return
         for binding_name in ['public']:
             binding = self.model.get_binding(binding_name)
             addresses.add(binding.network.ingress_address)
@@ -390,6 +414,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
 
     def _configure_dashboard(self, _) -> None:
         """Configure dashboard"""
+        self.request_certificates()
         if not self.mon.mons_ready:
             logging.info("Not configuring dashboard, mons not ready")
             return
