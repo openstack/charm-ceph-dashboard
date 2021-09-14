@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import base64
+import json
 import unittest
 import sys
 
@@ -385,6 +386,9 @@ class TestCephDashboardCharmBase(CharmTestCase):
         _gethostname.return_value = 'server1'
         cert_rel_id = self.harness.add_relation('certificates', 'vault')
         dash_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
+        lb_rel_id = self.harness.add_relation(
+            'loadbalancer',
+            'openstack-loadbalancer')
         self.harness.begin()
         self.harness.set_leader()
         self.harness.charm.TLS_CERT_PATH = mock_TLS_CERT_PATH
@@ -401,6 +405,40 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.harness.add_relation_unit(
             cert_rel_id,
             'vault/0')
+        self.harness.add_relation_unit(
+            lb_rel_id,
+            'openstack-loadbalancer/0')
+        # If lb relation is present but has not responded then certs should
+        # not have been requested yet.
+        self.assertEqual(
+            self.harness.get_relation_data(
+                cert_rel_id,
+                'ceph-dashboard/0'),
+            {})
+        self.harness.update_relation_data(
+            lb_rel_id,
+            'openstack-loadbalancer',
+            {
+                'frontends': json.dumps(
+                    {
+                        'ceph-dashboard': {
+                            'admin': {
+                                'ip': ['10.20.0.101'],
+                                'port': 8443,
+                                'protocol': 'http'},
+                            'internal': {
+                                'ip': ['10.30.0.101'],
+                                'port': 8443,
+                                'protocol': 'http'},
+                            'public': {
+                                'ip': ['10.10.0.101'],
+                                'port': 8443,
+                                'protocol': 'http'}}})})
+        self.assertNotEqual(
+            self.harness.get_relation_data(
+                cert_rel_id,
+                'ceph-dashboard/0'),
+            {})
         self.harness.update_relation_data(
             cert_rel_id,
             'vault/0',
