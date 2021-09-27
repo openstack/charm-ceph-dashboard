@@ -14,8 +14,8 @@ on configuring applications.
 
 #### `grafana-api-url`
 
-Sets the url of the grafana api when using embedded graphs. See
-[Embedded Grafana Dashboards](#Embedded-Grafana-Dashboards)
+Sets the URL of the Grafana API when using embedded graphs. See
+[Embedded Grafana dashboards][anchor-grafana-dashboards].
 
 #### `public-hostname`
 
@@ -29,9 +29,9 @@ is created or changes their password.
 
 #### `password-*`
 
-There are a number of `password-*` options which impose constraints
-on which passwords can be used. These options are ignored unless
-`enable-password-policy` is set to `True`.
+There are a number of `password-*` options which impose constraints on which
+passwords can be used. These options are ignored unless
+`enable-password-policy` is set to 'True'.
 
 ## Deployment
 
@@ -41,7 +41,6 @@ Deploy the ceph-dashboard as a subordinate to the ceph-mon charm.
 
     juju deploy ceph-dashboard
     juju add-relation ceph-dashboard:dashboard ceph-mon:dashboard
-
 
 TLS is a requirement for this charm. Enable it by adding a relation to the
 vault application:
@@ -54,11 +53,11 @@ See [Managing TLS certificates][cdg-tls] in the
 > **Note**: This charm also supports TLS configuration via charm options
   `ssl_cert`, `ssl_key`, and `ssl_ca`.
 
+## Embedded Grafana dashboards
 
-## Embedded Grafana Dashboards
-
-To enable the embedded grafana dashboards within the Ceph dashboard
-some additional relations are needed.
+To embed Grafana dashboards within the Ceph dashboard some additional relations
+are required (Grafana, Telegraf, and Prometheus are assumed to be
+pre-existing):
 
     juju add-relation ceph-dashboard:grafana-dashboard grafana:dashboards
     juju add-relation ceph-dashboard:prometheus prometheus:website
@@ -66,59 +65,69 @@ some additional relations are needed.
     juju add-relation ceph-osd:juju-info telegraf:juju-info
     juju add-relation ceph-mon:juju-info telegraf:juju-info
 
-Grafana, Telegraf and Prometheus should be related in the standard way
+Grafana, Telegraf, and Prometheus should be related in the standard way:
 
     juju add-relation grafana:grafana-source prometheus:grafana-source
     juju add-relation telegraf:prometheus-client prometheus:target
     juju add-relation telegraf:dashboards grafana:dashboards
 
-
 When Grafana is integrated with the Ceph Dashboard it requires TLS, so
 add a relation to Vault (the grafana charm also supports TLS configuration via
-ssl\_\* charm options):
+`ssl_*` charm options):
 
     juju add-relation grafana:certificates vault:certificates
 
-Grafana should be set with the following charm options:
+Grafana should be configured with the following charm options:
 
     juju config grafana anonymous=True
     juju config grafana allow_embedding=True
 
 The grafana charm also requires the vonage-status-panel and
-grafana-piechart-panel plugins. The Grafana charm `install_plugins`
-config option should be set to include URLs from which these plugins
-can be downloaded. They are currently available from 
-https://storage.googleapis.com/plugins-community. For example:
+grafana-piechart-panel plugins. The `install_plugins` configuration option
+should be set to include URLs from which these plugins can be downloaded. They
+are currently available from https://storage.googleapis.com/plugins-community.
+For example:
 
     juju config grafana install_plugins="https://storage.googleapis.com/plugins-community/vonage-status-panel/release/1.0.11/vonage-status-panel-1.0.11.zip,https://storage.googleapis.com/plugins-community/grafana-piechart-panel/release/1.6.2/grafana-piechart-panel-1.6.2.zip"
 
-Telegraf should be set with the following charm options:
+Telegraf should be configured with the following charm option:
 
     juju config telegraf hostname="{host}"
 
 > **Note**: The above command is to be invoked verbatim; no substitution is
-required.
+  required.
 
-Currently the dashboard cannot autodect the api endpoint of the grafana
-service, so the end of the deployment run the following:
+Currently the dashboard does not autodetect the API endpoint of the Grafana
+service. It needs to be provided via a configuration option:
 
-    juju config ceph-dashboard  grafana-api-url="https://<IP of grafana unit>:3000"
+    juju config ceph-dashboard grafana-api-url="https://<IP of grafana unit>:3000"
 
-## Enabling Prometheus Alerting
+## Prometheus alerting
 
-To enable Prometheus alerting, add the following relations:
+To enable alerting for an existing Prometheus service add the following
+relations:
 
     juju add-relation ceph-dashboard:prometheus prometheus:website
     juju add-relation ceph-mon:prometheus prometheus:target
     juju add-relation ceph-dashboard:alertmanager-service prometheus-alertmanager:alertmanager-service
     juju add-relation prometheus:alertmanager-service prometheus-alertmanager:alertmanager-service
 
+## Ceph Object storage
+
+To enable Object storage management of an existing Ceph RADOS Gateway service
+add the following relation:
+
+    juju relate ceph-dashboard:radosgw-dashboard ceph-radosgw:radosgw-user
+
+> **Note**: For Ceph versions older than Pacific the dashboard can only be
+  related to a single ceph-radosgw application.
+
 ## Actions
 
 This section lists Juju [actions][juju-docs-actions] supported by the charm.
 Actions allow specific operations to be performed on a per-unit basis. To
-display action descriptions run `juju actions --schema add-user`. If the charm
-is not deployed then see file `actions.yaml`.
+display action descriptions run `juju actions --schema ceph-dashboard`. If the
+charm is not deployed then see file `actions.yaml`.
 
 * `add-user`
 * `delete-user`
@@ -131,18 +140,9 @@ The OpenStack Charms project maintains two documentation guides:
   and support notes
 * [OpenStack Charms Deployment Guide][cdg]: for charm usage information
 
-
 # Bugs
 
 Please report bugs on [Launchpad][lp-bugs-charm-ceph-dashboard].
-
-## Object Gateway
-
-To enable object gateway management add the following relation:
-
-    juju relate ceph-dashboard:radosgw-dashboard ceph-radosgw:radosgw-user
-
-NOTE: On Octopus or earlier the dashboard can only be related to one ceph-radosgw application.
 
 <!-- LINKS -->
 
@@ -153,3 +153,4 @@ NOTE: On Octopus or earlier the dashboard can only be related to one ceph-radosg
 [cdg]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide
 [cdg-tls]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/app-certificate-management.html
 [lp-bugs-charm-ceph-dashboard]: https://bugs.launchpad.net/charm-ceph-dashboard
+[anchor-grafana-dashboards]: #embedded-grafana-dashboards
