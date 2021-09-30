@@ -266,13 +266,16 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         """Register rados gateways in dashboard db"""
         if self.unit.is_leader():
             creds = self.radosgw_user.get_user_creds()
-            if len(creds) < 1:
+            cred_count = len(set([
+                (c['access_key'], c['secret_key'])
+                for c in creds]))
+            if cred_count < 1:
                 logging.info("No object gateway creds found")
                 return
             if self._support_multiple_gateways():
                 self._update_multi_radosgw_creds(creds)
             else:
-                if len(creds) > 1:
+                if cred_count > 1:
                     logging.error(
                         "Cannot enable object gateway support. Ceph release "
                         "does not support multiple object gateways in the "
