@@ -15,3 +15,4 @@ git+https://github.com/openstack-charmers/zaza.git#egg=zaza
 git+https://github.com/openstack-charmers/zaza-openstack-tests.git#egg=zaza.openstack
 pytz    # workaround for 14.04 pip/tox
 pyudev  # for ceph-* charm unit tests (not mocked?)
+cffi==1.14.6; python_version < '3.6'  # cffi 1.15.0 drops support for py35.

@@ -184,7 +184,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(\n  1 - (\n    avg by(instance) \n     (cpu_usage_idle{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", cpu='cpu-total'} / 100)))",
+          "expr": "avg(\n  1 - (\n    avg by(dns_name) \n     (cpu_usage_idle{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", cpu='cpu-total'} / 100)))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -267,7 +267,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg (((mem_total{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) - (\n  (mem_free{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"})  + \n  (mem_cached{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) + \n  (mem_buffered{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) +\n  (mem_slab{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"})\n  )) /\n (mem_total{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}))",
+          "expr": "avg (((mem_total{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) - (\n  (mem_free{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"})  + \n  (mem_cached{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) + \n  (mem_buffered{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) +\n  (mem_slab{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"})\n  )) /\n (mem_total{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -349,7 +349,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum ((irate(diskio_reads{instance=~\"($osd_hosts|$mds_hosts).*\"}[5m]))  + \n(irate(diskio_writes{instance=~\"($osd_hosts|$mds_hosts).*\"}[5m])))",
+          "expr": "sum ((irate(diskio_reads{dns_name=~\"($osd_hosts|$mds_hosts).*\"}[5m]))  + \n(irate(diskio_writes{dns_name=~\"($osd_hosts|$mds_hosts).*\"}[5m])))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -431,7 +431,7 @@
       "tableColumn": "",
       "targets": [
         {
-	  "expr" : "avg (label_replace(label_replace((irate(diskio_io_time[5m]) / 10 ), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{instance=~\"($osd_hosts|$mds_hosts).*\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"))",
+	  "expr" : "avg (label_replace(label_replace((irate(diskio_io_time[5m]) / 10 ), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{dns_name=~\"($osd_hosts|$mds_hosts).*\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -514,7 +514,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum (\n  irate(net_bytes_recv{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n) +\nsum (\n  irate(net_bytes_sent{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m]))",
+          "expr": "sum (\n  irate(net_bytes_recv{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n) +\nsum (\n  irate(net_bytes_sent{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m]))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -572,10 +572,10 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "topk(10,100 * (\n  1 - (\n    avg by(instance) \n     (cpu_usage_idle{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", cpu='cpu-total'} / 100))))",
+          "expr": "topk(10,100 * (\n  1 - (\n    avg by(dns_name) \n     (cpu_usage_idle{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", cpu='cpu-total'} / 100))))",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{dns_name}}",
           "refId": "A"
         }
       ],
@@ -659,10 +659,10 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "topk(10, (sum by(instance) (\n  (\n  irate(net_bytes_recv{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n  ) +\n  (\n irate(net_bytes_sent{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n  ))\n  )\n)",
+          "expr": "topk(10, (sum by(dns_name) (\n  (\n  irate(net_bytes_recv{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n  ) +\n  (\n irate(net_bytes_sent{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n  ))\n  )\n)",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{dns_name}}",
           "refId": "A"
         }
       ],
