@@ -77,6 +77,12 @@ add a relation to Vault (the grafana charm also supports TLS configuration via
 
     juju add-relation grafana:certificates vault:certificates
 
+> **Important**: Ceph Dashboard will (silently) fail to display Grafana output
+  if the client browser cannot validate the Grafana server's TLS certificate.
+  Either ensure the signing CA certificate is known to the browser or, if in a
+  testing environment, contact the Grafana dashboard directly and have the
+  browser accept the unverified certificate.
+
 Grafana should be configured with the following charm options:
 
     juju config grafana anonymous=True
