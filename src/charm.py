@@ -486,11 +486,22 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             encryption_algorithm=serialization.NoEncryption())
         cert = self.ca_client.server_certificate.public_bytes(
             encoding=serialization.Encoding.PEM)
+        try:
+            root_ca_chain = self.ca_client.root_ca_chain.public_bytes(
+                encoding=serialization.Encoding.PEM
+            )
+        except ca_client.CAClientError:
+            # A root ca chain is not always available. If configured to just
+            # use vault with self-signed certificates, you will not get a ca
+            # chain. Instead, you will get a CAClientError being raised. For
+            # now, use a bytes() object for the root_ca_chain as it shouldn't
+            # cause problems and if a ca_cert_chain comes later, then it will
+            # get updated.
+            root_ca_chain = bytes()
         ca_cert = (
             self.ca_client.ca_certificate.public_bytes(
                 encoding=serialization.Encoding.PEM) +
-            self.ca_client.root_ca_chain.public_bytes(
-                encoding=serialization.Encoding.PEM))
+            root_ca_chain)
         return key, cert, ca_cert
 
     def _update_iscsigw_creds(self, creds):
