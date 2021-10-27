@@ -1,7 +1,11 @@
 # Overview
 
 The ceph-dashboard charm deploys the [Ceph Dashboard][upstream-ceph-dashboard],
-a built-in web-based Ceph management and monitoring application.
+a built-in web-based Ceph management and monitoring application. It works in
+conjunction with the [openstack-loadbalancer][loadbalancer-charm] charm, which
+in turn utilises the [hacluster][hacluster-charm] charm.
+
+> **Note**: The ceph-dashboard charm is currently in tech-preview.
 
 # Usage
 
@@ -52,6 +56,34 @@ See [Managing TLS certificates][cdg-tls] in the
 
 > **Note**: This charm also supports TLS configuration via charm options
   `ssl_cert`, `ssl_key`, and `ssl_ca`.
+
+### Load balancer
+
+The dashboard is accessed via a load balancer using VIPs and implemented via
+the openstack-loadbalancer and hacluster charms:
+
+    juju deploy -n 3 --config vip=10.5.20.200 cs:~openstack-charmers/openstack-loadbalancer
+    juju deploy hacluster openstack-loadbalancer-hacluster
+    juju add-relation openstack-loadbalancer:ha openstack-loadbalancer-hacluster:ha
+
+Now add a relation between the openstack-loadbalancer and ceph-dashboard
+applications:
+
+    juju add-relation ceph-dashboard:loadbalancer openstack-loadbalancer:loadbalancer
+
+### Dashboard user
+
+Credentials are needed to log in to the dashboard. Set these up by applying an
+action to any ceph-dashboard unit. For example, to create an administrator user
+called 'admin':
+
+    juju run-action --wait ceph-dashboard/0 add-user username=admin role=administrator
+
+The command's output will include a generated password.
+
+The dashboard can then be accessed on the configured VIP and on port 8443:
+
+https://10.5.20.200:8443
 
 ## Embedded Grafana dashboards
 
@@ -123,7 +155,7 @@ relations:
 To enable Object storage management of an existing Ceph RADOS Gateway service
 add the following relation:
 
-    juju relate ceph-dashboard:radosgw-dashboard ceph-radosgw:radosgw-user
+    juju add-relation ceph-dashboard:radosgw-dashboard ceph-radosgw:radosgw-user
 
 > **Note**: For Ceph versions older than Pacific the dashboard can only be
   related to a single ceph-radosgw application.
@@ -160,3 +192,5 @@ Please report bugs on [Launchpad][lp-bugs-charm-ceph-dashboard].
 [cdg-tls]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/app-certificate-management.html
 [lp-bugs-charm-ceph-dashboard]: https://bugs.launchpad.net/charm-ceph-dashboard
 [anchor-grafana-dashboards]: #embedded-grafana-dashboards
+[loadbalancer-charm]: https://jaas.ai/u/openstack-charmers/openstack-loadbalancer
+[hacluster-charm]: https://jaas.ai/hacluster
