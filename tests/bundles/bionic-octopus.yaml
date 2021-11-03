@@ -1,0 +1,101 @@
+local_overlay_enabled: False
+series: bionic
+applications:
+  percona-cluster:
+    charm: cs:~openstack-charmers-next/percona-cluster
+    num_units: 1
+    options:
+      dataset-size: 25%
+      max-connections: 1000
+      source: cloud:bionic-ussuri
+  ceph-osd:
+    charm: cs:~openstack-charmers-next/ceph-osd
+    num_units: 6
+    storage:
+      osd-devices: 'cinder,10G'
+    options:
+      osd-devices: '/dev/test-non-existent'
+      source: cloud:bionic-ussuri
+  ceph-mon:
+    charm: cs:~openstack-charmers-next/ceph-mon
+    num_units: 3
+    options:
+      monitor-count: '3'
+      source: cloud:bionic-ussuri
+  vault:
+    num_units: 1
+    charm: cs:~openstack-charmers-next/vault
+  ceph-dashboard:
+    charm: ../../ceph-dashboard.charm
+    options:
+      public-hostname: 'ceph-dashboard.zaza.local'
+  prometheus:
+    charm: cs:prometheus2
+    num_units: 1
+  grafana:
+    # SSL and allow_embedding are not released into cs:grafana yet, due 
+    # Octrober 2021
+    charm: cs:~llama-charmers-next/grafana
+    num_units: 1
+    options:
+      anonymous: True
+      install_plugins: https://storage.googleapis.com/plugins-community/vonage-status-panel/release/1.0.11/vonage-status-panel-1.0.11.zip,https://storage.googleapis.com/plugins-community/grafana-piechart-panel/release/1.6.2/grafana-piechart-panel-1.6.2.zip
+      install_method: snap
+      allow_embedding: True
+  telegraf:
+    charm: telegraf
+    channel: stable
+    options:
+       hostname: "{host}"
+  prometheus-alertmanager:
+    charm: cs:prometheus-alertmanager
+    num_units: 1
+  ceph-radosgw:
+    charm: cs:~openstack-charmers-next/ceph-radosgw
+    num_units: 3
+    options:
+      source: cloud:bionic-ussuri
+  ceph-fs:
+    charm: cs:~openstack-charmers-next/ceph-fs
+    num_units: 1
+    options:
+      source: cloud:bionic-ussuri
+relations:
+  - - 'ceph-osd:mon'
+    - 'ceph-mon:osd'
+  - - 'vault:shared-db'
+    - 'percona-cluster:shared-db'
+  - - 'ceph-dashboard:dashboard'
+    - 'ceph-mon:dashboard'
+  - - 'ceph-dashboard:certificates'
+    - 'vault:certificates'
+  - - 'ceph-mon:prometheus'
+    - 'prometheus:target'
+  - - 'grafana:grafana-source'
+    - 'prometheus:grafana-source'
+  - - 'grafana:certificates'
+    - 'vault:certificates'
+  - - 'ceph-osd:juju-info'
+    - 'telegraf:juju-info'
+  - - 'ceph-mon:juju-info'
+    - 'telegraf:juju-info'
+  - - 'telegraf:prometheus-client'
+    - 'prometheus:target'
+  - - 'telegraf:dashboards'
+    - 'grafana:dashboards'
+  - - 'ceph-dashboard:grafana-dashboard'
+    - 'grafana:dashboards'
+  - - 'ceph-dashboard:alertmanager-service'
+    - 'prometheus-alertmanager:alertmanager-service'
+  - - 'ceph-dashboard:prometheus'
+    - 'prometheus:website'
+  - - 'prometheus:alertmanager-service'
+    - 'prometheus-alertmanager:alertmanager-service'
+  - - 'ceph-radosgw:mon'
+    - 'ceph-mon:radosgw'
+  - - 'ceph-radosgw:certificates'
+    - 'vault:certificates'
+  - - 'ceph-dashboard:radosgw-dashboard'
+    - 'ceph-radosgw:radosgw-user'
+  - - 'ceph-mon:mds'
+    - 'ceph-fs:ceph-mds'

@@ -1,6 +1,7 @@
 charm_name: ceph-dasboard
 gate_bundles:
   - focal
+  - bionic-octopus
   - hirsute
 smoke_bundles:
   - focal

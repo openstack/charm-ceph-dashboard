@@ -3,6 +3,7 @@
       - charm-unit-jobs
     check:
       jobs:
+      - bionic-octopus
       - focal-octopus
       - hirsute-pacific
     vars:
@@ -21,9 +22,15 @@
     vars:
       tox_extra_args: focal
 - job:
-    name: hirsute-pacific
+    name: bionic-octopus
     parent: func-target
     dependencies: &smoke-jobs
       - focal-octopus
+    vars:
+      tox_extra_args: bionic-octopus
+- job:
+    name: hirsute-pacific
+    parent: func-target
+    dependencies: *smoke-jobs
     vars:
       tox_extra_args: hirsute
