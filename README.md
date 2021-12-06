@@ -41,7 +41,7 @@ passwords can be used. These options are ignored unless
 
 We are assuming a pre-existing Ceph cluster.
 
-Deploy the ceph-dashboard as a subordinate to the ceph-mon charm.
+Deploy ceph-dashboard as a subordinate to the ceph-mon charm:
 
     juju deploy cs:~openstack-charmers/ceph-dashboard
     juju add-relation ceph-dashboard:dashboard ceph-mon:dashboard
