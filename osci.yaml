@@ -1,11 +1,10 @@
 - project:
     templates:
-      - charm-yoga-unit-jobs
+      - charm-unit-jobs-py38
+      - charm-unit-jobs-py39
     check:
       jobs:
-      - bionic-octopus
       - focal-octopus
-      - hirsute-pacific
     vars:
       needs_charm_build: true
       charm_build_name: ceph-dashboard
@@ -14,22 +13,9 @@
     name: focal-octopus
     parent: func-target
     dependencies:
+      - charm-build
       - osci-lint
-      - tox-py36
       - tox-py38
       - tox-py39
     vars:
       tox_extra_args: focal
-- job:
-    name: bionic-octopus
-    parent: func-target
-    dependencies: &smoke-jobs
-      - focal-octopus
-    vars:
-      tox_extra_args: bionic-octopus
-- job:
-    name: hirsute-pacific
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: hirsute
