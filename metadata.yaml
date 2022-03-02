@@ -15,8 +15,6 @@ extra-bindings:
 subordinate: true
 series:
 - focal
-- groovy
-- hirsute
 requires:
   dashboard:
     interface: ceph-dashboard

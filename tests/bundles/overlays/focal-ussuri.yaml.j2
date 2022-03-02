@@ -1,0 +1,5 @@
+applications:
+  grafana:
+    options:
+    http_proxy: '{{ TEST_HTTP_PROXY }}'
+    install_plugins: {{ TEST_GRAFANA_PLUGIN_VONAGE_URL }},{{ TEST_GRAFANA_PLUGIN_PIECHART_URL }}
