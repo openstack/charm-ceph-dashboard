@@ -679,3 +679,31 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.subprocess.check_output.assert_called_once_with(
             ['ceph', 'dashboard', 'ac-user-delete', 'auser'],
             stderr=self.subprocess.STDOUT)
+
+    def test_saml(self):
+        self.subprocess.check_output.return_value = b''
+        self.harness.begin()
+        self.harness.charm.PACKAGES.append('python3-onelogin-saml2')
+        self.harness.charm._configure_saml()
+        self.subprocess.check_output.assert_not_called()
+
+        base_url = 'https://saml-base'
+        idp_meta = 'file://idp.xml'
+        username_attr = 'uid'
+        entity_id = 'some_id'
+
+        self.harness.update_config(
+            key_values={
+                'saml-base-url': base_url,
+                'saml-idp-metadata': idp_meta,
+                'saml-username-attribute': username_attr,
+                'saml-idp-entity-id': entity_id,
+            }
+        )
+
+        self.harness.charm._configure_saml()
+        self.subprocess.check_output.assert_called_with(
+            ['ceph', 'dashboard', 'sso', 'setup', 'saml2',
+             base_url, idp_meta, username_attr, entity_id],
+            stderr=ANY
+        )

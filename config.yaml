@@ -83,6 +83,26 @@ options:
     default: ""
     description: |
         Message of the day settings. Should be in the format "severity|expires|message". Set to "" to disable.
+  saml-base-url:
+    type: string
+    default: ""
+    description: |
+        The base URL from where the Ceph dashboard is accessed. Must support the SAML protocol.
+  saml-idp-metadata:
+    type: string
+    default: ""
+    description: |
+        URL that points to the IdP metadata XML. Can be remote or local.
+  saml-username-attribute:
+    type: string
+    default: ""
+    description: |
+        The attribute that is used to get the username from the authentication response.
+  saml-idp-entity-id:
+    type: string
+    default: "uid"
+    description: |
+        Unique ID to disambiguate when more than one entity id exists on the IdP metadata.
   ssl_cert:
     type: string
     default:
