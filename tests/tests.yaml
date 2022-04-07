@@ -3,6 +3,8 @@ gate_bundles:
   - focal
 smoke_bundles:
   - focal
+dev_bundles:
+  - jammy
 configure:
   - zaza.openstack.charm_tests.vault.setup.auto_initialize_no_validation
   - zaza.openstack.charm_tests.ceph.dashboard.setup.check_dashboard_cert

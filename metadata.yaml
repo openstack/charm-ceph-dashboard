@@ -14,10 +14,7 @@ extra-bindings:
   public:
 subordinate: true
 series:
-- bionic
 - focal
-- groovy
-- hirsute
 - jammy
 requires:
   dashboard:
