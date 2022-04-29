@@ -14,7 +14,6 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, StatusBase
 from ops.charm import ActionEvent
-from ops_openstack.core import charm_class, get_charm_class_for_release
 from typing import List, Union, Tuple
 
 import base64
@@ -47,7 +46,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
     """Ceph Dashboard charm."""
 
     _stored = StoredState()
-    PACKAGES = ['ceph-mgr-dashboard']
+    PACKAGES = ['ceph-mgr-dashboard', 'python3-onelogin-saml2']
     CEPH_CONFIG_PATH = Path('/etc/ceph')
     TLS_KEY_PATH = CEPH_CONFIG_PATH / 'ceph-dashboard.key'
     TLS_PUB_KEY_PATH = CEPH_CONFIG_PATH / 'ceph-dashboard-pub.key'
@@ -426,7 +425,6 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             ceph_utils.mgr_enable_dashboard()
         self._apply_ceph_config_from_charm_config()
         self._configure_tls()
-        self._configure_saml()
         ceph_utils.mgr_config_set(
             'mgr/dashboard/{hostname}/server_addr'.format(
                 hostname=socket.gethostname()),
@@ -452,6 +450,8 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                 self._run_cmd([
                     'ceph', 'dashboard', 'set-prometheus-api-host',
                     prometheus_ep])
+            self._configure_saml()
+
         self._register_dashboards()
         self._manage_radosgw()
         self._manage_iscsigw()
@@ -571,9 +571,6 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         self.kick_dashboard()
 
     def _configure_saml(self) -> None:
-        if 'python3-onelogin-saml2' not in self.PACKAGES:
-            return
-
         base_url = self.config.get('saml-base-url')
         idp_metadata = self.config.get('saml-idp-metadata')
         if not base_url or not idp_metadata:
@@ -626,20 +623,5 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             event.fail(exc.output)
 
 
-@charm_class
-class CephDashboardCharmOctopus(CephDashboardCharm):
-
-    _stored = StoredState()
-    release = 'octopus'
-
-
-@charm_class
-class CephDashboardCharmQuincy(CephDashboardCharm):
-
-    _stored = StoredState()
-    PACKAGES = ['ceph-mgr-dashboard', 'python3-onelogin-saml2']
-    release = 'quincy'
-
-
 if __name__ == "__main__":
-    main(get_charm_class_for_release())
+    main(CephDashboardCharm)

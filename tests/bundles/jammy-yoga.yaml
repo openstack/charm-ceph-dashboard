@@ -32,8 +32,9 @@ applications:
     options:
       public-hostname: 'ceph-dashboard.zaza.local'
   prometheus:
-    charm: cs:prometheus2
+    charm: ch:prometheus2
     num_units: 1
+    series: focal
   grafana:
     # SSL and allow_embedding are not released into cs:grafana yet, due 
     # Octrober 2021
@@ -44,14 +45,15 @@ applications:
       install_plugins: https://storage.googleapis.com/plugins-community/vonage-status-panel/release/1.0.11/vonage-status-panel-1.0.11.zip,https://storage.googleapis.com/plugins-community/grafana-piechart-panel/release/1.6.2/grafana-piechart-panel-1.6.2.zip
       install_method: snap
       allow_embedding: True
-  telegraf:
-    charm: telegraf
-    channel: stable
-    options:
-       hostname: "{host}"
+  #telegraf:
+  #  charm: telegraf
+  #  channel: stable
+  #  options:
+  #    hostname: "{host}"
   prometheus-alertmanager:
-    charm: cs:prometheus-alertmanager
+    charm: ch:prometheus-alertmanager
     num_units: 1
+    series: focal
   ceph-radosgw:
     charm: ch:ceph-radosgw
     num_units: 3
@@ -83,14 +85,14 @@ relations:
     - 'prometheus:grafana-source'
   - - 'grafana:certificates'
     - 'vault:certificates'
-  - - 'ceph-osd:juju-info'
-    - 'telegraf:juju-info'
-  - - 'ceph-mon:juju-info'
-    - 'telegraf:juju-info'
-  - - 'telegraf:prometheus-client'
-    - 'prometheus:target'
-  - - 'telegraf:dashboards'
-    - 'grafana:dashboards'
+  #- - 'ceph-osd:juju-info'
+  #- 'telegraf:juju-info'
+  #- - 'ceph-mon:juju-info'
+  #  - 'telegraf:juju-info'
+  #- - 'telegraf:prometheus-client'
+  #  - 'prometheus:target'
+  #- - 'telegraf:dashboards'
+  #  - 'grafana:dashboards'
   - - 'ceph-dashboard:grafana-dashboard'
     - 'grafana:dashboards'
   - - 'ceph-dashboard:alertmanager-service'
