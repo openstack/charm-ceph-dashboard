@@ -1,18 +1,22 @@
 - project:
     templates:
-      - charm-unit-jobs
+      - charm-unit-jobs-py35
+      - charm-unit-jobs-py36
+      - charm-unit-jobs-py37
+      - charm-unit-jobs-py38
     check:
       jobs:
       - focal-octopus
-      - hirsute-pacific
     vars:
       needs_charm_build: true
       charm_build_name: ceph-dashboard
       build_type: charmcraft
+      charmcraft_channel: 2.0/stable
 - job:
     name: focal-octopus
     parent: func-target
-    dependencies:
+    dependencies: &dependencies
+      - charm-build
       - osci-lint
       - tox-py35
       - tox-py36
@@ -20,10 +24,3 @@
       - tox-py38
     vars:
       tox_extra_args: focal
-- job:
-    name: hirsute-pacific
-    parent: func-target
-    dependencies: &smoke-jobs
-      - focal-octopus
-    vars:
-      tox_extra_args: hirsute
