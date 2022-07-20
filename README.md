@@ -43,7 +43,7 @@ We are assuming a pre-existing Ceph cluster.
 
 Deploy ceph-dashboard as a subordinate to the ceph-mon charm:
 
-    juju deploy cs:~openstack-charmers/ceph-dashboard
+    juju deploy ceph-dashboard
     juju add-relation ceph-dashboard:dashboard ceph-mon:dashboard
 
 TLS is a requirement for this charm. Enable it by adding a relation to the
@@ -62,7 +62,7 @@ See [Managing TLS certificates][cdg-tls] in the
 The dashboard is accessed via a load balancer using VIPs and implemented via
 the openstack-loadbalancer and hacluster charms:
 
-    juju deploy -n 3 --config vip=10.5.20.200 cs:~openstack-charmers/openstack-loadbalancer
+    juju deploy -n 3 --config vip=10.5.20.200 openstack-loadbalancer
     juju deploy hacluster openstack-loadbalancer-hacluster
     juju add-relation openstack-loadbalancer:ha openstack-loadbalancer-hacluster:ha
 
