@@ -2,11 +2,7 @@
     templates:
       - charm-unit-jobs-py38
       - charm-unit-jobs-py310
-    check:
-      jobs:
-      - focal-yoga
-      - jammy-yoga:
-          voting: false
+      - charm-yoga-functional-jobs
     vars:
       needs_charm_build: true
       charm_build_name: ceph-dashboard
