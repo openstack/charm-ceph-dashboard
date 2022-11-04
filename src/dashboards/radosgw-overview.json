@@ -83,14 +83,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(ceph_rgw_get_initial_lat_sum[30s]) / rate(ceph_rgw_get_initial_lat_count[30s])",
+          "expr": "rate(ceph_rgw_get_initial_lat_sum{job=~\"$job\"}[30s]) / rate(ceph_rgw_get_initial_lat_count{job=~\"$job\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "GET AVG",
           "refId": "A"
         },
         {
-          "expr": "rate(ceph_rgw_put_initial_lat_sum[30s]) / rate(ceph_rgw_put_initial_lat_count[30s])",
+          "expr": "rate(ceph_rgw_put_initial_lat_sum{job=~\"$job\"}[30s]) / rate(ceph_rgw_put_initial_lat_count{job=~\"$job\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "PUT AVG",
@@ -170,7 +170,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by(rgw_host) (label_replace(rate(ceph_rgw_req[30s]), \"rgw_host\", \"$1\", \"ceph_daemon\", \"rgw.(.*)\"))",
+          "expr": "sum by(rgw_host) (label_replace(rate(ceph_rgw_req{job=~\"$job\"}[30s]), \"rgw_host\", \"$1\", \"ceph_daemon\", \"rgw.(.*)\"))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{rgw_host}}",
@@ -252,7 +252,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "label_replace(rate(ceph_rgw_get_initial_lat_sum[30s]),\"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\") / \nlabel_replace(rate(ceph_rgw_get_initial_lat_count[30s]),\"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\")",
+          "expr": "label_replace(rate(ceph_rgw_get_initial_lat_sum{job=~\"$job\"}[30s]),\"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\") / \nlabel_replace(rate(ceph_rgw_get_initial_lat_count{job=~\"$job\"}[30s]),\"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{rgw_host}}",
@@ -334,14 +334,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(ceph_rgw_get_b[30s]))",
+          "expr": "sum(rate(ceph_rgw_get_b{job=~\"$job\"}[30s]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "GETs",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(ceph_rgw_put_b[30s]))",
+          "expr": "sum(rate(ceph_rgw_put_b{job=~\"$job\"}[30s]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "PUTs",
@@ -422,7 +422,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by(rgw_host) (\n  (label_replace(rate(ceph_rgw_get_b[30s]), \"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\")) + \n  (label_replace(rate(ceph_rgw_put_b[30s]), \"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\"))\n)",
+          "expr": "sum by(rgw_host) (\n  (label_replace(rate(ceph_rgw_get_b{job=~\"$job\"}[30s]), \"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\")) + \n  (label_replace(rate(ceph_rgw_put_b{job=~\"$job\"}[30s]), \"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\"))\n)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{rgw_host}}",
@@ -503,7 +503,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "label_replace(rate(ceph_rgw_put_initial_lat_sum[30s]),\"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\") / \nlabel_replace(rate(ceph_rgw_put_initial_lat_count[30s]),\"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\")",
+          "expr": "label_replace(rate(ceph_rgw_put_initial_lat_sum{job=~\"$job\"}[30s]),\"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\") / \nlabel_replace(rate(ceph_rgw_put_initial_lat_count{job=~\"$job\"}[30s]),\"rgw_host\",\"$1\",\"ceph_daemon\",\"rgw.(.*)\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{rgw_host}}",
@@ -590,6 +590,27 @@
         "refresh": 1,
         "regex": "",
         "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },

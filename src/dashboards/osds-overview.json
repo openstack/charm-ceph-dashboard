@@ -85,21 +85,21 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "avg (irate(ceph_osd_op_r_latency_sum[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count[1m]) * 1000)",
+          "expr": "avg (irate(ceph_osd_op_r_latency_sum{job=~\"$job\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count{job=~\"$job\"}[1m]) * 1000)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "AVG read",
           "refId": "A"
         },
         {
-          "expr": "max (irate(ceph_osd_op_r_latency_sum[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count[1m]) * 1000)",
+          "expr": "max (irate(ceph_osd_op_r_latency_sum{job=~\"$job\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count{job=~\"$job\"}[1m]) * 1000)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "MAX read",
           "refId": "B"
         },
         {
-          "expr": "quantile(0.95,\n  (irate(ceph_osd_op_r_latency_sum[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count[1m]) * 1000)\n)",
+          "expr": "quantile(0.95,\n  (irate(ceph_osd_op_r_latency_sum{job=~\"$job\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count{job=~\"$job\"}[1m]) * 1000)\n)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "@95%ile",
@@ -211,7 +211,7 @@
       ],
       "targets": [
         {
-          "expr": "topk(10,\n  (sort(\n    (irate(ceph_osd_op_r_latency_sum[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count[1m]) * 1000)\n  ))\n)\n\n",
+          "expr": "topk(10,\n  (sort(\n    (irate(ceph_osd_op_r_latency_sum{job=~\"$job\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count{job=~\"$job\"}[1m]) * 1000)\n  ))\n)\n\n",
           "format": "table",
           "instant": true,
           "intervalFactor": 1,
@@ -262,21 +262,21 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "avg (irate(ceph_osd_op_w_latency_sum[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count[1m]) * 1000)",
+          "expr": "avg (irate(ceph_osd_op_w_latency_sum{job=~\"$job\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count{job=~\"$job\"}[1m]) * 1000)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "AVG write",
           "refId": "A"
         },
         {
-          "expr": "max (irate(ceph_osd_op_w_latency_sum[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count[1m]) * 1000)",
+          "expr": "max (irate(ceph_osd_op_w_latency_sum{job=~\"$job\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count{job=~\"$job\"}[1m]) * 1000)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "MAX write",
           "refId": "B"
         },
         {
-          "expr": "quantile(0.95,\n (irate(ceph_osd_op_w_latency_sum[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count[1m]) * 1000)\n)",
+          "expr": "quantile(0.95,\n (irate(ceph_osd_op_w_latency_sum{job=~\"$job\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count{job=~\"$job\"}[1m]) * 1000)\n)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "@95%ile write",
@@ -388,7 +388,7 @@
       ],
       "targets": [
         {
-          "expr": "topk(10,\n  (sort(\n    (irate(ceph_osd_op_w_latency_sum[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count[1m]) * 1000)\n  ))\n)\n\n",
+          "expr": "topk(10,\n  (sort(\n    (irate(ceph_osd_op_w_latency_sum{job=~\"$job\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count{job=~\"$job\"}[1m]) * 1000)\n  ))\n)\n\n",
           "format": "table",
           "instant": true,
           "intervalFactor": 1,
@@ -431,7 +431,7 @@
       "strokeWidth": 1,
       "targets": [
         {
-          "expr": "count by (device_class) (ceph_osd_metadata)",
+          "expr": "count by (device_class) (ceph_osd_metadata{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device_class}}",
@@ -479,7 +479,7 @@
       "strokeWidth": 1,
       "targets": [
         {
-          "expr": "count(ceph_bluefs_wal_total_bytes)",
+          "expr": "count(ceph_bluefs_wal_total_bytes{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "bluestore",
@@ -487,7 +487,7 @@
           "step": 240
         },
         {
-          "expr": "count(ceph_osd_metadata) - count(ceph_bluefs_wal_total_bytes)",
+          "expr": "count(ceph_osd_metadata{job=~\"$job\"}) - count(ceph_bluefs_wal_total_bytes{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "filestore",
@@ -495,7 +495,7 @@
           "step": 240
         },
         {
-          "expr": "absent(ceph_bluefs_wal_total_bytes)*count(ceph_osd_metadata)",
+          "expr": "absent(ceph_bluefs_wal_total_bytes{job=~\"$job\"})*count(ceph_osd_metadata{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "filestore",
@@ -548,7 +548,7 @@
       "strokeWidth": "1",
       "targets": [
         {
-          "expr": "count(ceph_osd_stat_bytes < 1099511627776)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} < 1099511627776)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "<1 TB",
@@ -556,7 +556,7 @@
           "step": 2
         },
         {
-          "expr": "count(ceph_osd_stat_bytes >= 1099511627776 < 2199023255552)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} >= 1099511627776 < 2199023255552)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "<2 TB",
@@ -564,7 +564,7 @@
           "step": 2
         },
         {
-          "expr": "count(ceph_osd_stat_bytes >= 2199023255552 < 3298534883328)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} >= 2199023255552 < 3298534883328)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "<3TB",
@@ -572,7 +572,7 @@
           "step": 2
         },
         {
-          "expr": "count(ceph_osd_stat_bytes >= 3298534883328 < 4398046511104)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} >= 3298534883328 < 4398046511104)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "<4TB",
@@ -580,7 +580,7 @@
           "step": 2
         },
         {
-          "expr": "count(ceph_osd_stat_bytes >= 4398046511104 < 6597069766656)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} >= 4398046511104 < 6597069766656)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "<6TB",
@@ -588,7 +588,7 @@
           "step": 2
         },
         {
-          "expr": "count(ceph_osd_stat_bytes >= 6597069766656 < 8796093022208)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} >= 6597069766656 < 8796093022208)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "<8TB",
@@ -596,7 +596,7 @@
           "step": 2
         },
         {
-          "expr": "count(ceph_osd_stat_bytes >= 8796093022208 < 10995116277760)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} >= 8796093022208 < 10995116277760)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "<10TB",
@@ -604,7 +604,7 @@
           "step": 2
         },
         {
-          "expr": "count(ceph_osd_stat_bytes >= 10995116277760 < 13194139533312)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} >= 10995116277760 < 13194139533312)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "<12TB",
@@ -612,7 +612,7 @@
           "step": 2
         },
         {
-          "expr": "count(ceph_osd_stat_bytes >= 13194139533312)",
+          "expr": "count(ceph_osd_stat_bytes{job=~\"$job\"} >= 13194139533312)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "12TB+",
@@ -668,7 +668,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "ceph_osd_numpg\n",
+          "expr": "ceph_osd_numpg{job=~\"$job\"}\n",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -766,14 +766,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "round(sum(irate(ceph_pool_rd[30s])))",
+          "expr": "round(sum(irate(ceph_pool_rd{job=~\"$job\"}[30s])))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Reads",
           "refId": "A"
         },
         {
-          "expr": "round(sum(irate(ceph_pool_wr[30s])))",
+          "expr": "round(sum(irate(ceph_pool_wr{job=~\"$job\"}[30s])))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Writes",
@@ -823,21 +823,42 @@
   "tags": [],
   "templating": {
     "list": [
-        {
-          "current": {
+      {
+        "current": {
           "tags": [],
           "text": "default",
           "value": "default"
-          },
-          "hide": 0,
-          "label": "Data Source",
-          "name": "datasource",
-          "options": [],
-          "query": "prometheus",
-          "refresh": 1,
-          "regex": "",
-          "type": "datasource"
-        }
+        },
+        "hide": 0,
+        "label": "Data Source",
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
     ]
   },
   "time": {

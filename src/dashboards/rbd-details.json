@@ -40,7 +40,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "$Datasource",
+      "datasource": "$datasource",
       "fill": 1,
       "gridPos": {
         "h": 9,
@@ -74,14 +74,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(ceph_rbd_write_ops{pool=\"$Pool\", image=\"$Image\"}[30s])",
+          "expr": "irate(ceph_rbd_write_ops{job=~\"$job\", pool=\"$Pool\", image=\"$Image\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Write",
           "refId": "A"
         },
         {
-          "expr": "irate(ceph_rbd_read_ops{pool=\"$Pool\", image=\"$Image\"}[30s])",
+          "expr": "irate(ceph_rbd_read_ops{job=~\"$job\", pool=\"$Pool\", image=\"$Image\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Read",
@@ -133,7 +133,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "$Datasource",
+      "datasource": "$datasource",
       "fill": 1,
       "gridPos": {
         "h": 9,
@@ -165,14 +165,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(ceph_rbd_write_bytes{pool=\"$Pool\", image=\"$Image\"}[30s])",
+          "expr": "irate(ceph_rbd_write_bytes{job=~\"$job\", pool=\"$Pool\", image=\"$Image\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Write",
           "refId": "A"
         },
         {
-          "expr": "irate(ceph_rbd_read_bytes{pool=\"$Pool\", image=\"$Image\"}[30s])",
+          "expr": "irate(ceph_rbd_read_bytes{job=~\"$job\", pool=\"$Pool\", image=\"$Image\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Read",
@@ -224,7 +224,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "$Datasource",
+      "datasource": "$datasource",
       "fill": 1,
       "gridPos": {
         "h": 9,
@@ -256,14 +256,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(ceph_rbd_write_latency_sum{pool=\"$Pool\", image=\"$Image\"}[30s]) / irate(ceph_rbd_write_latency_count{pool=\"$Pool\", image=\"$Image\"}[30s])",
+          "expr": "irate(ceph_rbd_write_latency_sum{job=~\"$job\", pool=\"$Pool\", image=\"$Image\"}[30s]) / irate(ceph_rbd_write_latency_count{job=~\"$job\", pool=\"$Pool\", image=\"$Image\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Write",
           "refId": "A"
         },
         {
-          "expr": "irate(ceph_rbd_read_latency_sum{pool=\"$Pool\", image=\"$Image\"}[30s]) / irate(ceph_rbd_read_latency_count{pool=\"$Pool\", image=\"$Image\"}[30s])",
+          "expr": "irate(ceph_rbd_read_latency_sum{job=~\"$job\", pool=\"$Pool\", image=\"$Image\"}[30s]) / irate(ceph_rbd_read_latency_count{job=~\"$job\", pool=\"$Pool\", image=\"$Image\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Read",
@@ -320,8 +320,8 @@
       {
         "current": {},
         "hide": 0,
-        "label": null,
-        "name": "Datasource",
+        "label": "Data Source",
+        "name": "datasource",
         "options": [],
         "query": "prometheus",
         "refresh": 1,
@@ -332,7 +332,7 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "$Datasource",
+        "datasource": "$datasource",
         "hide": 0,
         "includeAll": false,
         "label": null,
@@ -353,7 +353,7 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "$Datasource",
+        "datasource": "$datasource",
         "hide": 0,
         "includeAll": false,
         "label": null,
@@ -363,6 +363,27 @@
         "query": "label_values(image)",
         "refresh": 1,
         "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",

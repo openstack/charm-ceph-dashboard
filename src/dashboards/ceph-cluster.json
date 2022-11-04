@@ -113,7 +113,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "ceph_health_status",
+          "expr": "ceph_health_status{job=~\"$job\"}",
           "format": "time_series",
           "instant": true,
           "interval": "$interval",
@@ -186,7 +186,7 @@
           "displayAliasType": "Always",
           "displayType": "Regular",
           "displayValueWithAlias": "When Alias Displayed",
-          "expr": "count(ceph_osd_metadata)",
+          "expr": "count(ceph_osd_metadata{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "All",
@@ -201,7 +201,7 @@
           "displayAliasType": "Always",
           "displayType": "Regular",
           "displayValueWithAlias": "When Alias Displayed",
-          "expr": "sum(ceph_osds_in)",
+          "expr": "sum(ceph_osds_in{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "In",
@@ -216,7 +216,7 @@
           "displayAliasType": "Warning / Critical",
           "displayType": "Regular",
           "displayValueWithAlias": "When Alias Displayed",
-          "expr": "sum(ceph_osd_in == bool 0)",
+          "expr": "sum(ceph_osd_in{job=~\"$job\"} == bool 0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -233,7 +233,7 @@
           "displayAliasType": "Always",
           "displayType": "Regular",
           "displayValueWithAlias": "When Alias Displayed",
-          "expr": "sum(ceph_osd_up)",
+          "expr": "sum(ceph_osd_up{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Up",
@@ -249,7 +249,7 @@
           "displayAliasType": "Warning / Critical",
           "displayType": "Regular",
           "displayValueWithAlias": "When Alias Displayed",
-          "expr": "sum(ceph_osd_up == bool 0)",
+          "expr": "sum(ceph_osd_up{job=~\"$job\"} == bool 0)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Down",
@@ -330,7 +330,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(ceph_osd_stat_bytes_used)/sum(ceph_osd_stat_bytes)",
+          "expr": "sum(ceph_osd_stat_bytes_used{job=~\"$job\"})/sum(ceph_osd_stat_bytes{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Used",
@@ -433,49 +433,49 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(ceph_pg_total)",
+          "expr": "sum(ceph_pg_total{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Total",
           "refId": "A"
         },
         {
-          "expr": "sum(ceph_pg_active)",
+          "expr": "sum(ceph_pg_active{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Active",
           "refId": "B"
         },
         {
-          "expr": "sum(ceph_pg_total - ceph_pg_active)",
+          "expr": "sum(ceph_pg_total{job=~\"$job\"} - ceph_pg_active{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Inactive",
           "refId": "G"
         },
         {
-          "expr": "sum(ceph_pg_undersized)",
+          "expr": "sum(ceph_pg_undersized{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Undersized",
           "refId": "F"
         },
         {
-          "expr": "sum(ceph_pg_degraded)",
+          "expr": "sum(ceph_pg_degraded{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Degraded",
           "refId": "C"
         },
         {
-          "expr": "sum(ceph_pg_inconsistent)",
+          "expr": "sum(ceph_pg_inconsistent{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Inconsistent",
           "refId": "D"
         },
         {
-          "expr": "sum(ceph_pg_down)",
+          "expr": "sum(ceph_pg_down{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Down",
@@ -577,28 +577,28 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "quantile(0.95, ceph_osd_apply_latency_ms)",
+          "expr": "quantile(0.95, ceph_osd_apply_latency_ms{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Apply Latency P_95",
           "refId": "A"
         },
         {
-          "expr": "quantile(0.95, ceph_osd_commit_latency_ms)",
+          "expr": "quantile(0.95, ceph_osd_commit_latency_ms{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Commit Latency P_95",
           "refId": "B"
         },
         {
-          "expr": "avg(ceph_osd_apply_latency_ms)",
+          "expr": "avg(ceph_osd_apply_latency_ms{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Avg Apply Latency",
           "refId": "C"
         },
         {
-          "expr": "avg(ceph_osd_commit_latency_ms)",
+          "expr": "avg(ceph_osd_commit_latency_ms{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Avg Commit Latency",
@@ -687,7 +687,7 @@
           "displayAliasType": "Always",
           "displayType": "Regular",
           "displayValueWithAlias": "When Alias Displayed",
-          "expr": "sum(ceph_mon_quorum_status)",
+          "expr": "sum(ceph_mon_quorum_status{job=~\"$job\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -704,7 +704,7 @@
           "displayAliasType": "Always",
           "displayType": "Regular",
           "displayValueWithAlias": "When Alias Displayed",
-          "expr": "count(ceph_mon_quorum_status)",
+          "expr": "count(ceph_mon_quorum_status{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Total",
@@ -721,7 +721,7 @@
           "displayAliasType": "Warning / Critical",
           "displayType": "Annotation",
           "displayValueWithAlias": "Never",
-          "expr": "count(ceph_mon_quorum_status) / sum(ceph_mon_quorum_status)",
+          "expr": "count(ceph_mon_quorum_status{job=~\"$job\"}) / sum(ceph_mon_quorum_status{job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "MONs out of Quorum",
@@ -774,7 +774,7 @@
           "displayAliasType": "Always",
           "displayType": "Regular",
           "displayValueWithAlias": "When Alias Displayed",
-          "expr": "ceph_mds_server_handle_client_session",
+          "expr": "ceph_mds_server_handle_client_session{job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Clients",
@@ -841,7 +841,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(ceph_osd_op_w_in_bytes[1m]))",
+          "expr": "sum(irate(ceph_osd_op_w_in_bytes{job=~\"$job\"}[1m]))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -849,7 +849,7 @@
           "refId": "A"
         },
         {
-          "expr": "sum(irate(ceph_osd_op_r_out_bytes[1m]))",
+          "expr": "sum(irate(ceph_osd_op_r_out_bytes{job=~\"$job\"}[1m]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Reads",
@@ -948,7 +948,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(deriv(ceph_pool_stored[1m]))",
+          "expr": "sum(deriv(ceph_pool_stored{job=~\"$job\"}[1m]))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -1046,14 +1046,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(ceph_osd_op_w[1m]))",
+          "expr": "sum(rate(ceph_osd_op_w{job=~\"$job\"}[1m]))",
           "interval": "",
           "legendFormat": "Write",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
-          "expr": "sum(irate(ceph_osd_op_r[1m]))",
+          "expr": "sum(irate(ceph_osd_op_r{job=~\"$job\"}[1m]))",
           "hide": false,
           "interval": "",
           "legendFormat": "Read",
@@ -1159,14 +1159,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(ceph_pool_objects)",
+          "expr": "sum(ceph_pool_objects{job=~\"$job\"})",
           "interval": "",
           "legendFormat": "Total",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
-          "expr": "ceph_num_objects_degraded",
+          "expr": "ceph_num_objects_degraded{job=~\"$job\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "Degraded",
@@ -1174,7 +1174,7 @@
           "refId": "B"
         },
         {
-          "expr": "ceph_num_objects_misplaced",
+          "expr": "ceph_num_objects_misplaced{job=~\"$job\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "Misplaced",
@@ -1182,7 +1182,7 @@
           "refId": "C"
         },
         {
-          "expr": "ceph_num_objects_unfound",
+          "expr": "ceph_num_objects_unfound{job=~\"$job\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "Unfound",
@@ -1272,7 +1272,7 @@
       "span": 12,
       "targets": [
         {
-          "expr": "ceph_osd_stat_bytes_used / ceph_osd_stat_bytes",
+          "expr": "ceph_osd_stat_bytes_used{job=~\"$job\"} / ceph_osd_stat_bytes{job=~\"$job\"}",
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
@@ -1343,7 +1343,7 @@
       "reverseYBuckets": false,
       "targets": [
         {
-          "expr": "ceph_osd_numpg",
+          "expr": "ceph_osd_numpg{job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "#PGs",
@@ -1423,7 +1423,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(ceph_osd_recovery_ops[1m]))",
+          "expr": "sum(irate(ceph_osd_recovery_ops{job=~\"$job\"}[1m]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Op/s",
@@ -1565,6 +1565,27 @@
         "query": "1m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
         "refresh": 2,
         "type": "interval"
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },

@@ -101,7 +101,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(sum by (hostname) (ceph_osd_metadata))",
+          "expr": "count(sum by (hostname) (ceph_osd_metadata{job=~\"$job\"}))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -184,7 +184,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(\n  1 - (\n    avg by(dns_name) \n     (cpu_usage_idle{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", cpu='cpu-total'} / 100)))",
+          "expr": "avg(\n  1 - (\n    avg by(dns_name) \n     (cpu_usage_idle{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", cpu='cpu-total', job=~\"$job\"} / 100)))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -267,7 +267,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg (((mem_total{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) - (\n  (mem_free{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"})  + \n  (mem_cached{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) + \n  (mem_buffered{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) +\n  (mem_slab{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"})\n  )) /\n (mem_total{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}))",
+          "expr": "avg (((mem_total{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", job=~\"$job\"}) - (\n  (mem_free{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"})  + \n  (mem_cached{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", job=~\"$job\"}) + \n  (mem_buffered{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", job=~\"$job\"}) +\n  (mem_slab{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", job=~\"$job\"})\n  )) /\n (mem_total{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", job=~\"$job\"}))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -349,7 +349,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum ((irate(diskio_reads{dns_name=~\"($osd_hosts|$mds_hosts).*\"}[5m]))  + \n(irate(diskio_writes{dns_name=~\"($osd_hosts|$mds_hosts).*\"}[5m])))",
+          "expr": "sum ((irate(diskio_reads{dns_name=~\"($osd_hosts|$mds_hosts).*\", job=~\"$job\"}[5m]))  + \n(irate(diskio_writes{dns_name=~\"($osd_hosts|$mds_hosts).*\", job=~\"$job\"}[5m])))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -431,7 +431,7 @@
       "tableColumn": "",
       "targets": [
         {
-	  "expr" : "avg (label_replace(label_replace((irate(diskio_io_time[5m]) / 10 ), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{dns_name=~\"($osd_hosts|$mds_hosts).*\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"))",
+	  "expr" : "avg (label_replace(label_replace((irate(diskio_io_time{job=~\"$job\"}[5m]) / 10 ), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{dns_name=~\"($osd_hosts|$mds_hosts).*\", job=~\"$job\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -514,7 +514,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum (\n  irate(net_bytes_recv{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n) +\nsum (\n  irate(net_bytes_sent{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m]))",
+          "expr": "sum (\n  irate(net_bytes_recv{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\", job=~\"$job\"}[1m])\n) +\nsum (\n  irate(net_bytes_sent{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\", job=~\"$job\"}[1m]))",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -572,7 +572,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "topk(10,100 * (\n  1 - (\n    avg by(dns_name) \n     (cpu_usage_idle{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", cpu='cpu-total'} / 100))))",
+          "expr": "topk(10,100 * (\n  1 - (\n    avg by(dns_name) \n     (cpu_usage_idle{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\", cpu='cpu-total', job=~\"$job\"} / 100))))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{dns_name}}",
@@ -659,7 +659,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "topk(10, (sum by(dns_name) (\n  (\n  irate(net_bytes_recv{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n  ) +\n  (\n irate(net_bytes_sent{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[1m])\n  ))\n  )\n)",
+          "expr": "topk(10, (sum by(dns_name) (\n  (\n  irate(net_bytes_recv{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\", job=~\"$job\"}[1m])\n  ) +\n  (\n irate(net_bytes_sent{dns_name=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\", job=~\"$job\"}[1m])\n  ))\n  )\n)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{dns_name}}",
@@ -806,6 +806,27 @@
         "query": "label_values(ceph_rgw_qlen, ceph_daemon)",
         "refresh": 1,
         "regex": "rgw.(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",
