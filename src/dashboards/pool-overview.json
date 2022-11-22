@@ -82,7 +82,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(ceph_pool_metadata)",
+          "expr": "count(ceph_pool_metadata{job=~\"$job\"})",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -170,7 +170,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(ceph_pool_metadata{compression_mode!=\"none\"})",
+          "expr": "count(ceph_pool_metadata{compression_mode!=\"none\", job=~\"$job\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -256,7 +256,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(ceph_osd_stat_bytes)",
+          "expr": "sum(ceph_osd_stat_bytes{job=~\"$job\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -341,7 +341,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(ceph_pool_bytes_used)",
+          "expr": "sum(ceph_pool_bytes_used{job=~\"$job\"})",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -429,7 +429,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(ceph_pool_stored)",
+          "expr": "sum(ceph_pool_stored{job=~\"$job\"})",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -516,7 +516,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(ceph_pool_compress_under_bytes - ceph_pool_compress_bytes_used)",
+          "expr": "sum(ceph_pool_compress_under_bytes{job=~\"$job\"} - ceph_pool_compress_bytes_used{job=~\"$job\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -601,7 +601,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(ceph_pool_compress_under_bytes > 0) / sum(ceph_pool_stored_raw and ceph_pool_compress_under_bytes > 0)) * 100",
+          "expr": "(sum(ceph_pool_compress_under_bytes{job=~\"$job\"} > 0) / sum(ceph_pool_stored_raw{job=~\"$job\"} and ceph_pool_compress_under_bytes{job=~\"$job\"} > 0)) * 100",
           "format": "table",
           "hide": false,
           "interval": "",
@@ -688,7 +688,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(ceph_pool_compress_under_bytes > 0) / sum(ceph_pool_compress_bytes_used > 0)",
+          "expr": "sum(ceph_pool_compress_under_bytes{job=~\"$job\"} > 0) / sum(ceph_pool_compress_bytes_used{job=~\"$job\"} > 0)",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1080,7 +1080,7 @@
       ],
       "targets": [
         {
-          "expr": "(ceph_pool_percent_used * on(pool_id) group_left(name) ceph_pool_metadata)",
+          "expr": "(ceph_pool_percent_used{job=~\"$job\"} * on(pool_id) group_left(name) ceph_pool_metadata{job=~\"$job\"})",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1090,7 +1090,7 @@
           "refId": "D"
         },
         {
-          "expr": "ceph_pool_stored * on(pool_id) group_left ceph_pool_metadata",
+          "expr": "ceph_pool_stored{job=~\"$job\"} * on(pool_id) group_left ceph_pool_metadata{job=~\"$job\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1098,7 +1098,7 @@
           "refId": "J"
         },
         {
-          "expr": "ceph_pool_max_avail * on(pool_id) group_left(name) ceph_pool_metadata",
+          "expr": "ceph_pool_max_avail{job=~\"$job\"} * on(pool_id) group_left(name) ceph_pool_metadata{job=~\"$job\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1106,7 +1106,7 @@
           "refId": "B"
         },
         {
-          "expr": "delta(ceph_pool_stored[5d])",
+          "expr": "delta(ceph_pool_stored{job=~\"$job\"}[5d])",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1114,7 +1114,7 @@
           "refId": "F"
         },
         {
-          "expr": "ceph_pool_metadata",
+          "expr": "ceph_pool_metadata{job=~\"$job\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1122,7 +1122,7 @@
           "refId": "I"
         },
         {
-          "expr": "ceph_pool_metadata{compression_mode!=\"none\"}",
+          "expr": "ceph_pool_metadata{compression_mode!=\"none\", job=~\"$job\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1130,7 +1130,7 @@
           "refId": "K"
         },
         {
-          "expr": "(ceph_pool_compress_under_bytes / ceph_pool_compress_bytes_used > 0) and on(pool_id) (((ceph_pool_compress_under_bytes > 0) / ceph_pool_stored_raw) * 100 > 0.5)",
+          "expr": "(ceph_pool_compress_under_bytes{job=~\"$job\"} / ceph_pool_compress_bytes_used{job=~\"$job\"} > 0) and on(pool_id) (((ceph_pool_compress_under_bytes{job=~\"$job\"} > 0) / ceph_pool_stored_raw{job=~\"$job\"}) * 100 > 0.5)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1140,7 +1140,7 @@
           "refId": "A"
         },
         {
-          "expr": "((ceph_pool_compress_under_bytes > 0) / ceph_pool_stored_raw) * 100",
+          "expr": "((ceph_pool_compress_under_bytes{job=~\"$job\"} > 0) / ceph_pool_stored_raw{job=~\"$job\"}) * 100",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1148,7 +1148,7 @@
           "refId": "C"
         },
         {
-          "expr": "(ceph_pool_compress_under_bytes - ceph_pool_compress_bytes_used > 0)",
+          "expr": "(ceph_pool_compress_under_bytes{job=~\"$job\"} - ceph_pool_compress_bytes_used{job=~\"$job\"} > 0)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1156,7 +1156,7 @@
           "refId": "E"
         },
         {
-          "expr": "rate(ceph_pool_rd[30s]) + rate(ceph_pool_wr[30s])",
+          "expr": "rate(ceph_pool_rd{job=~\"$job\"}[30s]) + rate(ceph_pool_wr{job=~\"$job\"}[30s])",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1164,7 +1164,7 @@
           "refId": "G"
         },
         {
-          "expr": "rate(ceph_pool_rd_bytes[30s]) + rate(ceph_pool_wr_bytes[30s])",
+          "expr": "rate(ceph_pool_rd_bytes{job=~\"$job\"}[30s]) + rate(ceph_pool_wr_bytes{job=~\"$job\"}[30s])",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1226,7 +1226,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "topk($topk,round((rate(ceph_pool_rd[30s]) + rate(ceph_pool_wr[30s])),1) * on(pool_id) group_left(instance,name) ceph_pool_metadata) ",
+          "expr": "topk($topk,round((rate(ceph_pool_rd{job=~\"$job\"}[30s]) + rate(ceph_pool_wr{job=~\"$job\"}[30s])),1) * on(pool_id) group_left(instance,name) ceph_pool_metadata{job=~\"$job\"}) ",
           "format": "time_series",
           "hide": false,
           "interval": "",
@@ -1235,7 +1235,7 @@
           "refId": "F"
         },
         {
-          "expr": "topk($topk,rate(ceph_pool_wr[30s]) + on(pool_id) group_left(instance,name) ceph_pool_metadata) ",
+          "expr": "topk($topk,rate(ceph_pool_wr{job=~\"$job\"}[30s]) + on(pool_id) group_left(instance,name) ceph_pool_metadata{job=~\"$job\"}) ",
           "format": "time_series",
           "hide": true,
           "interval": "",
@@ -1330,7 +1330,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "topk($topk,(rate(ceph_pool_rd_bytes[30s]) + rate(ceph_pool_wr_bytes[30s])) * on(pool_id) group_left(instance,name) ceph_pool_metadata)",
+          "expr": "topk($topk,(rate(ceph_pool_rd_bytes{job=~\"$job\"}[30s]) + rate(ceph_pool_wr_bytes{job=~\"$job\"}[30s])) * on(pool_id) group_left(instance,name) ceph_pool_metadata{job=~\"$job\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1422,7 +1422,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "ceph_pool_bytes_used * on(pool_id) group_right ceph_pool_metadata",
+          "expr": "ceph_pool_bytes_used{job=~\"$job\"} * on(pool_id) group_right ceph_pool_metadata{job=~\"$job\"}",
           "interval": "",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -1521,6 +1521,27 @@
         "query": "15",
         "skipUrlSync": false,
         "type": "textbox"
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },

@@ -130,7 +130,7 @@
           "displayAliasType": "Warning / Critical",
           "displayType": "Regular",
           "displayValueWithAlias": "Never",
-          "expr": "ceph_osd_up{ceph_daemon=~\"$osd\"}",
+          "expr": "ceph_osd_up{job=~\"$job\", ceph_daemon=~\"$osd\"}",
           "format": "table",
           "instant": false,
           "interval": "",
@@ -229,7 +229,7 @@
           "displayAliasType": "Warning / Critical",
           "displayType": "Regular",
           "displayValueWithAlias": "Never",
-          "expr": "ceph_osd_in{ceph_daemon=~\"$osd\"}",
+          "expr": "ceph_osd_in{job=~\"$job\", ceph_daemon=~\"$osd\"}",
           "format": "table",
           "instant": false,
           "interval": "",
@@ -315,7 +315,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "ceph_osd_numpg{ceph_daemon=~\"$osd\"}",
+          "expr": "ceph_osd_numpg{job=~\"$job\", ceph_daemon=~\"$osd\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -436,7 +436,7 @@
       "pluginVersion": "7.4.1",
       "targets": [
         {
-          "expr": "(ceph_osd_stat_bytes_used{ceph_daemon=\"$osd\"}/ceph_osd_stat_bytes{ceph_daemon=\"$osd\"})*100",
+          "expr": "(ceph_osd_stat_bytes_used{job=~\"$job\", ceph_daemon=~\"$osd\"}/ceph_osd_stat_bytes{job=~\"$job\", ceph_daemon=~\"$osd\"})*100",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -514,14 +514,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(ceph_osd_op_r_latency_sum{ceph_daemon=~\"$osd\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count[1m])",
+          "expr": "irate(ceph_osd_op_r_latency_sum{job=~\"$job\", ceph_daemon=~\"$osd\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_r_latency_count{job=~\"$job\", ceph_daemon=~\"$osd\"}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "read",
           "refId": "A"
         },
         {
-          "expr": "irate(ceph_osd_op_w_latency_sum{ceph_daemon=~\"$osd\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count[1m])",
+          "expr": "irate(ceph_osd_op_w_latency_sum{job=~\"$job\", ceph_daemon=~\"$osd\"}[1m]) / on (ceph_daemon) irate(ceph_osd_op_w_latency_count{job=~\"$job\", ceph_daemon=~\"$osd\"}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "write",
@@ -623,14 +623,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(ceph_osd_op_r{ceph_daemon=~\"$osd\"}[1m])",
+          "expr": "irate(ceph_osd_op_r{job=~\"$job\", ceph_daemon=~\"$osd\"}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Reads",
           "refId": "A"
         },
         {
-          "expr": "irate(ceph_osd_op_w{ceph_daemon=~\"$osd\"}[1m])",
+          "expr": "irate(ceph_osd_op_w{job=~\"$job\", ceph_daemon=~\"$osd\"}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Writes",
@@ -732,14 +732,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(ceph_osd_op_r_out_bytes{ceph_daemon=~\"$osd\"}[1m])",
+          "expr": "irate(ceph_osd_op_r_out_bytes{job=~\"$job\", ceph_daemon=~\"$osd\"}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Read Bytes",
           "refId": "A"
         },
         {
-          "expr": "irate(ceph_osd_op_w_in_bytes{ceph_daemon=~\"$osd\"}[1m])",
+          "expr": "irate(ceph_osd_op_w_in_bytes{job=~\"$job\", ceph_daemon=~\"$osd\"}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Write Bytes",
@@ -855,14 +855,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(label_replace(irate(node_disk_read_time_seconds_total[1m]) / irate(node_disk_reads_completed_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\"))",
+          "expr": "(label_replace(irate(node_disk_read_time_seconds_total[1m]) / irate(node_disk_reads_completed_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{job=~\"$job\", ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\"))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{instance}}/{{device}} Reads",
           "refId": "A"
         },
         {
-          "expr": "(label_replace(irate(node_disk_write_time_seconds_total[1m]) / irate(node_disk_writes_completed_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\"))",
+          "expr": "(label_replace(irate(node_disk_write_time_seconds_total[1m]) / irate(node_disk_writes_completed_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{job=~\"$job\", ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\"))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{instance}}/{{device}} Writes",
@@ -964,14 +964,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "label_replace(irate(node_disk_writes_completed_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
+          "expr": "label_replace(irate(node_disk_writes_completed_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{job=~\"$job\", ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}} on {{instance}} Writes",
           "refId": "A"
         },
         {
-          "expr": "label_replace(irate(node_disk_reads_completed_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
+          "expr": "label_replace(irate(node_disk_reads_completed_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{job=~\"$job\", ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}} on {{instance}} Reads",
@@ -1073,14 +1073,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "label_replace(irate(node_disk_read_bytes_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
+          "expr": "label_replace(irate(node_disk_read_bytes_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{job=~\"$job\", ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{instance}} {{device}} Reads",
           "refId": "A"
         },
         {
-          "expr": "label_replace(irate(node_disk_written_bytes_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
+          "expr": "label_replace(irate(node_disk_written_bytes_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{job=~\"$job\", ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{instance}} {{device}} Writes",
@@ -1177,7 +1177,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "label_replace(irate(node_disk_io_time_seconds_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
+          "expr": "label_replace(irate(node_disk_io_time_seconds_total[1m]), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\") and on (instance, device) label_replace(label_replace(ceph_disk_occupation{job=~\"$job\", ceph_daemon=~\"$osd\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\"), \"instance\", \"$1\", \"instance\", \"([^:.]*).*\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}} on {{instance}}",
@@ -1252,11 +1252,32 @@
         "datasource": "$datasource",
         "hide": 0,
         "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
         "label": "OSD",
         "multi": false,
         "name": "osd",
         "options": [],
-        "query": "label_values(ceph_osd_metadata,ceph_daemon)",
+        "query": "label_values(ceph_osd_metadata{job=~\"$job\"}, ceph_daemon)",
         "refresh": 1,
         "regex": "(.*)",
         "skipUrlSync": false,

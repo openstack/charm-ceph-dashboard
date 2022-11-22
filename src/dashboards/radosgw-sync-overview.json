@@ -70,7 +70,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (source_zone) (rate(ceph_data_sync_from_zone_fetch_bytes_sum[30s]))",
+          "expr": "sum by (source_zone) (rate(ceph_data_sync_from_zone_fetch_bytes_sum{job=~\"$job\"}[30s]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{source_zone}}",
@@ -151,7 +151,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (source_zone) (rate(ceph_data_sync_from_zone_fetch_bytes_count[30s]))",
+          "expr": "sum by (source_zone) (rate(ceph_data_sync_from_zone_fetch_bytes_count{job=~\"$job\"}[30s]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{source_zone}}",
@@ -232,7 +232,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (source_zone) (rate(ceph_data_sync_from_zone_poll_latency_sum[30s]) * 1000)",
+          "expr": "sum by (source_zone) (rate(ceph_data_sync_from_zone_poll_latency_sum{job=~\"$job\"}[30s]) * 1000)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{source_zone}}",
@@ -313,7 +313,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (source_zone) (rate(ceph_data_sync_from_zone_fetch_errors[30s]))",
+          "expr": "sum by (source_zone) (rate(ceph_data_sync_from_zone_fetch_errors{job=~\"$job\"}[30s]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{source_zone}}",
@@ -400,6 +400,27 @@
         "refresh": 1,
         "regex": "",
         "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },

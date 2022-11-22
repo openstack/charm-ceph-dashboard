@@ -114,7 +114,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(sum by (ceph_daemon) (ceph_osd_metadata{hostname='$ceph_hosts'}))",
+          "expr": "count(sum by (ceph_daemon) (ceph_osd_metadata{hostname='$ceph_hosts', job=~\"$job\"}))",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A",
@@ -182,7 +182,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "cpu_usage_user{cpu=\"cpu-total\", host='$ceph_hosts'}",
+          "expr": "cpu_usage_user{cpu=\"cpu-total\", host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -191,7 +191,7 @@
           "step": 2
         },
         {
-          "expr": "cpu_usage_iowait{cpu=\"cpu-total\", host='$ceph_hosts'}",
+          "expr": "cpu_usage_iowait{cpu=\"cpu-total\", host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -200,7 +200,7 @@
           "step": 2
         },
         {
-          "expr": "cpu_usage_nice{cpu=\"cpu-total\", host='$ceph_hosts'}",
+          "expr": "cpu_usage_nice{cpu=\"cpu-total\", host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -209,7 +209,7 @@
           "step": 2
         },
         {
-          "expr": "cpu_usage_softirq{cpu=\"cpu-total\", host='$ceph_hosts'}",
+          "expr": "cpu_usage_softirq{cpu=\"cpu-total\", host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -218,7 +218,7 @@
           "step": 2
         },
         {
-          "expr": "cpu_usage_irq{cpu=\"cpu-total\", host='$ceph_hosts'}",
+          "expr": "cpu_usage_irq{cpu=\"cpu-total\", host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -227,7 +227,7 @@
           "step": 2
         },
         {
-          "expr": "cpu_usage_system{cpu=\"cpu-total\", host='$ceph_hosts'}",
+          "expr": "cpu_usage_system{cpu=\"cpu-total\", host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -236,7 +236,7 @@
           "step": 2
         },
         {
-          "expr": "cpu_usage_idle{cpu=\"cpu-total\", host='$ceph_hosts'}",
+          "expr": "cpu_usage_idle{cpu=\"cpu-total\", host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -337,14 +337,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "mem_used{host='$ceph_hosts'}",
+          "expr": "mem_used{host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "used",
           "refId": "D"
         },
         {
-          "expr": "mem_free{host='$ceph_hosts'}",
+          "expr": "mem_free{host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 1,
@@ -352,7 +352,7 @@
           "refId": "A"
         },
         {
-          "expr": "mem_buffered{host='$ceph_hosts'} + mem_cached{host='$ceph_hosts'}",
+          "expr": "mem_buffered{host='$ceph_hosts', job=~\"$job\"} + mem_cached{host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 1,
@@ -360,7 +360,7 @@
           "refId": "C"
         },
         {
-          "expr": "mem_total{host='$ceph_hosts'}",
+          "expr": "mem_total{host='$ceph_hosts', job=~\"$job\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 1,
@@ -455,7 +455,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (device) (\n  irate(net_bytes_recv{host='$ceph_hosts',device!=\"lo\"}[1m])\n)",
+          "expr": "sum by (device) (\n  irate(net_bytes_recv{host='$ceph_hosts',device!=\"lo\", job=~\"$job\"}[1m])\n)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}}.rx",
@@ -464,7 +464,7 @@
           "textEditor": true
         },
         {
-          "expr": "sum by (device) (\n  irate(net_bytes_sent{host='$ceph_hosts',device!=\"lo\"}[1m])\n)",
+          "expr": "sum by (device) (\n  irate(net_bytes_sent{host='$ceph_hosts',device!=\"lo\", job=~\"$job\"}[1m])\n)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}}.tx",
@@ -555,7 +555,7 @@
       "steppedLine": false,
       "targets": [
         {
-	  "expr": "irate(net_drop_in{host='$ceph_hosts'}[1m])",
+	  "expr": "irate(net_drop_in{host='$ceph_hosts', job=~\"$job\"}[1m])",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -563,7 +563,7 @@
           "refId": "A"
         },
         {
-	  "expr": "irate(net_drop_out{host='$ceph_hosts'}[1m])",
+	  "expr": "irate(net_drop_out{host='$ceph_hosts', job=~\"$job\"}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}}.tx",
@@ -675,7 +675,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(ceph_osd_stat_bytes and on (ceph_daemon) ceph_disk_occupation{instance=~\"($ceph_hosts)([\\\\.:].*)?\"})",
+          "expr": "sum(ceph_osd_stat_bytes{job=~\"$job\"} and on (ceph_daemon) ceph_disk_occupation{instance=~\"($ceph_hosts)([\\\\.:].*)?\", job=~\"$job\"})",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A",
@@ -739,7 +739,7 @@
       "steppedLine": false,
       "targets": [
         {
-	  "expr": "irate(net_err_in{host='$ceph_hosts'}[1m])",
+	  "expr": "irate(net_err_in{host='$ceph_hosts', job=~\"$job\"}[1m])",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -747,7 +747,7 @@
           "refId": "A"
         },
         {
-	  "expr": "irate(net_err_out{host='$ceph_hosts'}[1m])",
+	  "expr": "irate(net_err_out{host='$ceph_hosts', job=~\"$job\"}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}}.tx",
@@ -852,7 +852,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "label_replace(label_replace((irate(diskio_writes{host='$ceph_hosts'}[5m])), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts'}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
+          "expr": "label_replace(label_replace((irate(diskio_writes{host='$ceph_hosts', job=~\"$job\"}[5m])), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts', job=~\"$job\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}}({{ceph_daemon}}) writes",
@@ -861,7 +861,7 @@
           "textEditor": true
         },
         {
-          "expr": "label_replace(label_replace((irate(diskio_reads{host='$ceph_hosts'}[5m])), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts'}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
+          "expr": "label_replace(label_replace((irate(diskio_reads{host='$ceph_hosts', job=~\"$job\"}[5m])), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts', job=~\"$job\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 1,
@@ -953,14 +953,14 @@
       "steppedLine": false,
       "targets": [
         {
-	  "expr" : "label_replace(label_replace((irate(diskio_write_bytes[5m]) / 10 ), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts'}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
+	  "expr" : "label_replace(label_replace((irate(diskio_write_bytes{job=~\"$job\"}[5m]) / 10 ), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts', job=~\"$job\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}}({{ceph_daemon}}) write",
           "refId": "B"
         },
         {
-	  "expr" : "label_replace(label_replace((irate(diskio_read_bytes[5m]) / 10 ), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts'}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
+	  "expr" : "label_replace(label_replace((irate(diskio_read_bytes{job=~\"$job\"}[5m]) / 10 ), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts', job=~\"$job\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{device}}({{ceph_daemon}}) read",
@@ -1046,7 +1046,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "label_replace(label_replace((irate(diskio_weighted_io_time{host='$ceph_hosts'}[5m])), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts'}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
+          "expr": "label_replace(label_replace((irate(diskio_weighted_io_time{host='$ceph_hosts', job=~\"$job\"}[5m])), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts', job=~\"$job\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 1,
@@ -1137,7 +1137,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "label_replace(label_replace((irate(diskio_io_time{host='$ceph_hosts'}[5m])), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts'}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
+          "expr": "label_replace(label_replace((irate(diskio_io_time{host='$ceph_hosts', job=~\"$job\"}[5m])), \"device\", \"$1\", \"name\", \"(.+)\"), \"exported_instance\", \"$1\", \"host\", \"(.+)\") *  on(exported_instance, device) group_right(ceph_daemon) label_replace(ceph_disk_occupation{exported_instance='$ceph_hosts', job=~\"$job\"}, \"device\", \"$1\", \"device\", \"/dev/(.*)\")",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 1,
@@ -1225,6 +1225,27 @@
         "regex": "([^.:]*).*",
         "skipUrlSync": false,
         "sort": 3,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
         "tagValuesQuery": "",
         "tags": [],
         "tagsQuery": "",

@@ -102,7 +102,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(ceph_pool_stored / (ceph_pool_stored + ceph_pool_max_avail)) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\"}",
+          "expr": "(ceph_pool_stored{job=~\"$job\"} / (ceph_pool_stored{job=~\"$job\"} + ceph_pool_max_avail{job=~\"$job\"})) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\", job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -183,7 +183,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(ceph_pool_max_avail / deriv(ceph_pool_stored[6h])) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\"} > 0",
+          "expr": "(ceph_pool_max_avail{job=~\"$job\"} / deriv(ceph_pool_stored{job=~\"$job\"}[6h])) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\", job=~\"$job\"} > 0",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -248,7 +248,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "deriv(ceph_pool_objects[1m]) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\"}",
+          "expr": "deriv(ceph_pool_objects{job=~\"$job\"}[1m]) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\", job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Objects per second",
@@ -341,14 +341,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(ceph_pool_rd[1m]) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\"}",
+          "expr": "irate(ceph_pool_rd{job=~\"$job\"}[1m]) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\", job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "reads",
           "refId": "B"
         },
         {
-          "expr": "irate(ceph_pool_wr[1m]) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\"}",
+          "expr": "irate(ceph_pool_wr{job=~\"$job\"}[1m]) * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\", job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "writes",
@@ -441,14 +441,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(ceph_pool_rd_bytes[1m]) + on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\"}",
+          "expr": "irate(ceph_pool_rd_bytes{job=~\"$job\"}[1m]) + on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\", job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "reads",
           "refId": "A"
         },
         {
-          "expr": "irate(ceph_pool_wr_bytes[1m]) + on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\"}",
+          "expr": "irate(ceph_pool_wr_bytes{job=~\"$job\"}[1m]) + on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\", job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "writes",
@@ -536,7 +536,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "ceph_pool_objects * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\"}",
+          "expr": "ceph_pool_objects{job=~\"$job\"} * on(pool_id) group_left(instance,name) ceph_pool_metadata{name=~\"$pool_name\", job=~\"$job\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Number of Objects",
@@ -620,6 +620,27 @@
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
         "tagValuesQuery": "",
         "tags": [],
         "tagsQuery": "",

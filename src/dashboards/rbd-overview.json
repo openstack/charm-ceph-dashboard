@@ -83,14 +83,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "round(sum(irate(ceph_rbd_write_ops[30s])))",
+          "expr": "round(sum(irate(ceph_rbd_write_ops{job=~\"$job\"}[30s])))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Writes",
           "refId": "A"
         },
         {
-          "expr": "round(sum(irate(ceph_rbd_read_ops[30s])))",
+          "expr": "round(sum(irate(ceph_rbd_read_ops{job=~\"$job\"}[30s])))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -176,7 +176,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "round(sum(irate(ceph_rbd_write_bytes[30s])))",
+          "expr": "round(sum(irate(ceph_rbd_write_bytes{job=~\"$job\"}[30s])))",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -184,7 +184,7 @@
           "refId": "A"
         },
         {
-          "expr": "round(sum(irate(ceph_rbd_read_bytes[30s])))",
+          "expr": "round(sum(irate(ceph_rbd_read_bytes{job=~\"$job\"}[30s])))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -271,14 +271,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "round(sum(irate(ceph_rbd_write_latency_sum[30s])) / sum(irate(ceph_rbd_write_latency_count[30s])))",
+          "expr": "round(sum(irate(ceph_rbd_write_latency_sum{job=~\"$job\"}[30s])) / sum(irate(ceph_rbd_write_latency_count{job=~\"$job\"}[30s])))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Write",
           "refId": "A"
         },
         {
-          "expr": "round(sum(irate(ceph_rbd_read_latency_sum[30s])) / sum(irate(ceph_rbd_read_latency_count[30s])))",
+          "expr": "round(sum(irate(ceph_rbd_read_latency_sum{job=~\"$job\"}[30s])) / sum(irate(ceph_rbd_read_latency_count{job=~\"$job\"}[30s])))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -416,7 +416,7 @@
       ],
       "targets": [
         {
-          "expr": "topk(10, (sort((irate(ceph_rbd_write_ops[30s]) + on (image, pool, namespace) irate(ceph_rbd_read_ops[30s])))))",
+          "expr": "topk(10, (sort((irate(ceph_rbd_write_ops{job=~\"$job\"}[30s]) + on (image, pool, namespace) irate(ceph_rbd_read_ops{job=~\"$job\"}[30s])))))",
           "format": "table",
           "instant": true,
           "intervalFactor": 1,
@@ -513,7 +513,7 @@
       ],
       "targets": [
         {
-          "expr": "topk(10, sort(sum(irate(ceph_rbd_read_bytes[30s]) + irate(ceph_rbd_write_bytes[30s])) by (pool, image, namespace)))",
+          "expr": "topk(10, sort(sum(irate(ceph_rbd_read_bytes{job=~\"$job\"}[30s]) + irate(ceph_rbd_write_bytes{job=~\"$job\"}[30s])) by (pool, image, namespace)))",
           "format": "table",
           "instant": true,
           "intervalFactor": 1,
@@ -611,7 +611,7 @@
       ],
       "targets": [
         {
-          "expr": "topk(10,\n  sum(\n    irate(ceph_rbd_write_latency_sum[30s]) / clamp_min(irate(ceph_rbd_write_latency_count[30s]), 1) +\n    irate(ceph_rbd_read_latency_sum[30s]) / clamp_min(irate(ceph_rbd_read_latency_count[30s]), 1)\n  ) by (pool, image, namespace)\n)",
+          "expr": "topk(10,\n  sum(\n    irate(ceph_rbd_write_latency_sum{job=~\"$job\"}[30s]) / clamp_min(irate(ceph_rbd_write_latency_count{job=~\"$job\"}[30s]), 1) +\n    irate(ceph_rbd_read_latency_sum{job=~\"$job\"}[30s]) / clamp_min(irate(ceph_rbd_read_latency_count{job=~\"$job\"}[30s]), 1)\n  ) by (pool, image, namespace)\n)",
           "format": "table",
           "instant": true,
           "intervalFactor": 1,
@@ -645,6 +645,27 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$datasource",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Job",
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(ceph_osd_metadata, job)",
+        "refresh": 1,
+        "regex": "(.*)",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
