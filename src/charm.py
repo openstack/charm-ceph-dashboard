@@ -227,7 +227,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             self.TLS_PORT,
             self.TLS_PORT,
             self._get_bind_ip(),
-            'httpd')
+            'http')
 
     def _register_dashboards(self) -> None:
         """Register all dashboards with grafana"""
