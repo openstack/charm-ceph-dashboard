@@ -47,7 +47,6 @@ applications:
     num_units: 1
     options:
       anonymous: True
-      install_plugins: https://storage.googleapis.com/plugins-community/vonage-status-panel/release/1.0.11/vonage-status-panel-1.0.11.zip,https://storage.googleapis.com/plugins-community/grafana-piechart-panel/release/1.6.2/grafana-piechart-panel-1.6.2.zip
       install_method: snap
       allow_embedding: True
   telegraf:
