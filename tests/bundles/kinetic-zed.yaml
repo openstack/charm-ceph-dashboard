@@ -8,7 +8,7 @@ applications:
     series: kinetic
     num_units: 6
     storage:
-      osd-devices: 'cinder,10G'
+      osd-devices: 'cinder,10G,2'
     options:
       source: *source
       osd-devices: '/dev/test-non-existent'

@@ -8,7 +8,7 @@ applications:
     series: lunar
     num_units: 6
     storage:
-      osd-devices: 'cinder,10G'
+      osd-devices: 'cinder,10G,2'
     options:
       source: *source
       osd-devices: '/dev/test-non-existent'
@@ -31,10 +31,10 @@ applications:
     num_units: 3
     options:
       source: *source
-    channel: latest/edge
+    channel: 8.0/edge
   vault-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: 8.0/edge
   ceph-dashboard:
     charm: ../../ceph-dashboard.charm
     options:
@@ -61,16 +61,16 @@ applications:
     charm: ch:ceph-radosgw
     series: lunar
     num_units: 3
-    channel: quincy/edge
     options:
       source: *source
+    channel: quincy/edge
   ceph-fs:
     charm: ch:ceph-fs
     series: lunar
     num_units: 1
-    channel: quincy/edge
     options:
       source: *source
+    channel: quincy/edge
   ceph-iscsi:
     charm: ch:ceph-iscsi
     series: lunar
