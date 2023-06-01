@@ -7,7 +7,7 @@ applications:
     charm: ch:ceph-osd
     num_units: 6
     storage:
-      osd-devices: 'cinder,10G'
+      osd-devices: 'cinder,10G,2'
     options:
       source: *openstack-origin
       osd-devices: '/dev/test-non-existent'
@@ -29,10 +29,10 @@ applications:
     num_units: 3
     options:
       source: *openstack-origin
-    channel: latest/edge
+    channel: 8.0/edge
   vault-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: 8.0/edge
   ceph-dashboard:
     charm: ../../ceph-dashboard.charm
     options:
@@ -62,20 +62,20 @@ applications:
     num_units: 3
     options:
       source: *openstack-origin
-    channel: latest/edge
+    channel: quincy/edge
   ceph-fs:
     charm: ch:ceph-fs
     num_units: 1
     options:
       source: *openstack-origin
-    channel: latest/edge
+    channel: quincy/edge
   ceph-iscsi:
     charm: ch:ceph-iscsi
     num_units: 2
     options:
       source: *openstack-origin
       gateway-metadata-pool: iscsi-foo-metadata
-    channel: latest/edge
+    channel: quincy/edge
 relations:
   - - 'ceph-osd:mon'
     - 'ceph-mon:osd'

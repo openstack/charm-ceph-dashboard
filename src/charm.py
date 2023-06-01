@@ -415,14 +415,19 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                     "Skipping charm option {}, not supported".format(
                         option.charm_option_name))
 
-    def _configure_dashboard(self, _) -> None:
+    def _configure_dashboard(self, event) -> None:
         """Configure dashboard"""
         self.request_certificates()
         if not self.mon.mons_ready:
             logging.info("Not configuring dashboard, mons not ready")
             return
-        if self.unit.is_leader() and not ceph_utils.is_dashboard_enabled():
-            ceph_utils.mgr_enable_dashboard()
+        if not ceph_utils.is_dashboard_enabled():
+            if self.unit.is_leader():
+                ceph_utils.mgr_enable_dashboard()
+            else:
+                logging.info("Dashboard not enabled, deferring event.")
+                return
+
         self._apply_ceph_config_from_charm_config()
         self._configure_tls()
         ceph_utils.mgr_config_set(

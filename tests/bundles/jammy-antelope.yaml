@@ -7,7 +7,7 @@ applications:
     charm: ch:ceph-osd
     num_units: 6
     storage:
-      osd-devices: 'cinder,10G'
+      osd-devices: 'cinder,10G,2'
     options:
       osd-devices: '/dev/test-non-existent'
       source: *openstack-origin
@@ -27,10 +27,10 @@ applications:
     charm: ch:mysql-innodb-cluster
     constraints: mem=3072M
     num_units: 3
-    channel: latest/edge
+    channel: 8.0/edge
   vault-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: 8.0/edge
   ceph-dashboard:
     charm: ../../ceph-dashboard.charm
     options:
