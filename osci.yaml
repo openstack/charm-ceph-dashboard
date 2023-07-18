@@ -3,7 +3,6 @@
       - charm-unit-jobs-py38
       - charm-unit-jobs-py310
       - charm-yoga-functional-jobs
-      - charm-zed-functional-jobs
       - charm-functional-jobs
     vars:
       needs_charm_build: true

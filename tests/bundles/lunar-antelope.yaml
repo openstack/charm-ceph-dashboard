@@ -10,7 +10,6 @@ applications:
     storage:
       osd-devices: 'cinder,10G,2'
     options:
-      source: *source
       osd-devices: '/dev/test-non-existent'
     channel: quincy/edge
   ceph-mon:
@@ -18,7 +17,6 @@ applications:
     series: lunar
     num_units: 3
     options:
-      source: *source
       monitor-count: '3'
     channel: quincy/edge
   vault:
@@ -29,12 +27,10 @@ applications:
     charm: ch:mysql-innodb-cluster
     constraints: mem=3072M
     num_units: 3
-    options:
-      source: *source
-    channel: 8.0/edge
+    channel: latest/edge
   vault-mysql-router:
     charm: ch:mysql-router
-    channel: 8.0/edge
+    channel: latest/edge
   ceph-dashboard:
     charm: ../../ceph-dashboard.charm
     options:
@@ -61,22 +57,17 @@ applications:
     charm: ch:ceph-radosgw
     series: lunar
     num_units: 3
-    options:
-      source: *source
     channel: quincy/edge
   ceph-fs:
     charm: ch:ceph-fs
     series: lunar
     num_units: 1
-    options:
-      source: *source
     channel: quincy/edge
   ceph-iscsi:
     charm: ch:ceph-iscsi
     series: lunar
     num_units: 2
     options:
-      source: *source
       gateway-metadata-pool: iscsi-foo-metadata
     channel: quincy/edge
 relations:
