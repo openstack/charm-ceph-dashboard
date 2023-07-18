@@ -6,6 +6,7 @@ maintainer: OpenStack Charmers <openstack-discuss@lists.openstack.org>
 summary: Enable dashboard for Ceph
 description: |
   Enable the ceph dashboard on the ceph mon units
+docs: https://discourse.charmhub.io/t/ceph-dashboard-docs-index/11007
 tags:
 - openstack
 - storage
