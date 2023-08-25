@@ -151,6 +151,12 @@ class _CephDashboardCharm(charm.CephDashboardCharm):
     def _get_bind_ip(self):
         return '10.0.0.10'
 
+    def _clean_ssl_conf(self, _event):
+        return  # empty stub
+
+    def _is_relation_active(self, _event):
+        return True
+
 
 class TestCephDashboardCharmBase(CharmTestCase):
 
@@ -158,7 +164,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
         'ceph_utils',
         'ch_host',
         'socket',
-        'subprocess',
+        'subprocess',  # charm's subprocess import
         'ch_host',
     ]
 
@@ -207,9 +213,11 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.harness.begin()
         self.assertFalse(self.harness.charm._stored.is_started)
 
-    def test_charm_config(self):
+    @patch('ceph_dashboard_commands.subprocess')
+    @patch('charm_option.ch_host')
+    def test_charm_config(self, option_ch_host, subprocess):
         self.ceph_utils.is_dashboard_enabled.return_value = True
-        self.ch_host.cmp_pkgrevno.return_value = 0
+        option_ch_host.cmp_pkgrevno.return_value = 0
         basic_boolean = [
             ('enable-password-policy', 'set-pwd-policy-enabled'),
             ('password-policy-check-length',
@@ -254,13 +262,16 @@ class TestCephDashboardCharmBase(CharmTestCase):
                 {
                     'mon-ready': 'True'})
             _harness.begin()
+            _harness.set_leader(True)
+            _harness.charm.is_ceph_dashboard_ssl_key_cert_same \
+                = lambda *_: True
             expected_cmd = base_cmd + expected_options
-            self.subprocess.check_output.reset_mock()
+            subprocess.check_output.reset_mock()
             _harness.update_config(
                 key_values={charm_option: charm_value})
-            self.subprocess.check_output.assert_called_once_with(
+            subprocess.check_output.assert_called_once_with(
                 expected_cmd,
-                stderr=self.subprocess.STDOUT)
+                stderr=subprocess.STDOUT)
 
     def test__on_ca_available(self):
         rel_id = self.harness.add_relation('certificates', 'vault')
@@ -332,7 +343,8 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.ceph_utils.mgr_disable_dashboard.assert_called_once_with()
         self.ceph_utils.mgr_enable_dashboard.assert_called_once_with()
 
-    def test__configure_dashboard(self):
+    @patch('ceph_dashboard_commands.subprocess')
+    def test_configure_dashboard(self, subprocess):
         self.ceph_utils.is_dashboard_enabled.return_value = True
         rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
         self.harness.begin()
@@ -377,9 +389,11 @@ class TestCephDashboardCharmBase(CharmTestCase):
             self.harness.charm._get_bind_ip(),
             '10.0.0.10')
 
+    @patch('ceph_dashboard_commands.check_ceph_dashboard_ssl_configured')
     @patch('socket.gethostname')
-    def test_certificates_relation(self, _gethostname):
+    def test_certificates_relation(self, _gethostname, ssl_configured):
         self.ceph_utils.is_dashboard_enabled.return_value = True
+        ssl_configured.return_value = False
         mock_TLS_KEY_PATH = MagicMock()
         mock_TLS_CERT_PATH = MagicMock()
         mock_TLS_VAULT_CA_CERT_PATH = MagicMock()
@@ -434,6 +448,8 @@ class TestCephDashboardCharmBase(CharmTestCase):
                                 'ip': ['10.10.0.101'],
                                 'port': 8443,
                                 'protocol': 'http'}}})})
+        # Reemit deferred events.
+        self.harness.framework.reemit()
         self.assertNotEqual(
             self.harness.get_relation_data(
                 cert_rel_id,
@@ -464,8 +480,10 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.ceph_utils.mgr_disable_dashboard.assert_called_once_with()
         self.ceph_utils.mgr_enable_dashboard.assert_called_once_with()
 
-    def test_certificates_from_config(self):
+    @patch('ceph_dashboard_commands.check_ceph_dashboard_ssl_configured')
+    def test_certificates_from_config(self, ssl_configured):
         self.ceph_utils.is_dashboard_enabled.return_value = True
+        ssl_configured.return_value = False
         mock_TLS_KEY_PATH = MagicMock()
         mock_TLS_CERT_PATH = MagicMock()
         mock_TLS_CHARM_CA_CERT_PATH = MagicMock()
@@ -503,7 +521,8 @@ class TestCephDashboardCharmBase(CharmTestCase):
         self.ceph_utils.mgr_disable_dashboard.assert_called_once_with()
         self.ceph_utils.mgr_enable_dashboard.assert_called_once_with()
 
-    def test_rados_gateway(self):
+    @patch('ceph_dashboard_commands.subprocess')
+    def test_rados_gateway(self, subprocess):
         self.ceph_utils.is_dashboard_enabled.return_value = True
         self.ch_host.cmp_pkgrevno.return_value = 1
         mon_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
@@ -541,16 +560,17 @@ class TestCephDashboardCharmBase(CharmTestCase):
                 'access-key': 'XNUZVPL364U0BL1OXWJZ',
                 'secret-key': 'SgBo115xJcW90nkQ5EaNQ6fPeyeUUT0GxhwQbLFo',
                 'uid': 'radosgw-user-9'})
-        self.subprocess.check_output.assert_has_calls([
+        subprocess.check_output.assert_has_calls([
             call(['ceph', 'dashboard', 'set-rgw-api-access-key', '-i', ANY],
-                 stderr=self.subprocess.STDOUT),
+                 stderr=subprocess.STDOUT),
             call().decode('UTF-8'),
             call(['ceph', 'dashboard', 'set-rgw-api-secret-key', '-i', ANY],
-                 stderr=self.subprocess.STDOUT),
+                 stderr=subprocess.STDOUT),
             call().decode('UTF-8'),
         ])
 
-    def test_rados_gateway_multi_relations_pacific(self):
+    @patch('ceph_dashboard_commands.subprocess')
+    def test_rados_gateway_multi_relations_pacific(self, subprocess):
         self.ceph_utils.is_dashboard_enabled.return_value = True
         self.ch_host.cmp_pkgrevno.return_value = 1
         rel_id1 = self.harness.add_relation('radosgw-dashboard', 'ceph-eu')
@@ -589,7 +609,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
                 'access-key': 'XNUZVPL364U0BL1OXWJZ',
                 'secret-key': 'SgBo115xJcW90nkQ5EaNQ6fPeyeUUT0GxhwQbLFo',
                 'uid': 'radosgw-user-9'})
-        self.subprocess.check_output.reset_mock()
+        subprocess.check_output.reset_mock()
         self.harness.update_relation_data(
             rel_id2,
             'ceph-us',
@@ -597,16 +617,17 @@ class TestCephDashboardCharmBase(CharmTestCase):
                 'access-key': 'JGHKJGDKJGJGJHGYYYYM',
                 'secret-key': 'iljkdfhHKHKd88LKxNLSKDiijfjfjfldjfjlf44',
                 'uid': 'radosgw-user-10'})
-        self.subprocess.check_output.assert_has_calls([
+        subprocess.check_output.assert_has_calls([
             call(['ceph', 'dashboard', 'set-rgw-api-access-key', '-i', ANY],
-                 stderr=self.subprocess.STDOUT),
+                 stderr=subprocess.STDOUT),
             call().decode('UTF-8'),
             call(['ceph', 'dashboard', 'set-rgw-api-secret-key', '-i', ANY],
-                 stderr=self.subprocess.STDOUT),
+                 stderr=subprocess.STDOUT),
             call().decode('UTF-8'),
         ])
 
-    def test_rados_gateway_multi_relations_octopus(self):
+    @patch('ceph_dashboard_commands.subprocess')
+    def test_rados_gateway_multi_relations_octopus(self, subprocess):
         self.ch_host.cmp_pkgrevno.return_value = -1
         rel_id1 = self.harness.add_relation('radosgw-dashboard', 'ceph-eu')
         rel_id2 = self.harness.add_relation('radosgw-dashboard', 'ceph-us')
@@ -635,7 +656,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
                 'access-key': 'XNUZVPL364U0BL1OXWJZ',
                 'secret-key': 'SgBo115xJcW90nkQ5EaNQ6fPeyeUUT0GxhwQbLFo',
                 'uid': 'radosgw-user-9'})
-        self.subprocess.check_output.reset_mock()
+        subprocess.check_output.reset_mock()
         self.harness.update_relation_data(
             rel_id2,
             'ceph-us',
@@ -643,7 +664,7 @@ class TestCephDashboardCharmBase(CharmTestCase):
                 'access-key': 'JGHKJGDKJGJGJHGYYYYM',
                 'secret-key': 'iljkdfhHKHKd88LKxNLSKDiijfjfjfldjfjlf44',
                 'uid': 'radosgw-user-10'})
-        self.assertFalse(self.subprocess.check_output.called)
+        self.assertFalse(subprocess.check_output.called)
 
     @patch.object(charm.secrets, 'choice')
     def test__gen_user_password(self, _choice):
@@ -653,10 +674,11 @@ class TestCephDashboardCharmBase(CharmTestCase):
             self.harness.charm._gen_user_password(),
             'rrrrrrrrrrrr')
 
+    @patch('ceph_dashboard_commands.subprocess')
     @patch.object(charm.tempfile, 'NamedTemporaryFile')
     @patch.object(charm.secrets, 'choice')
-    def test__add_user_action(self, _choice, _NTFile):
-        self.subprocess.check_output.return_value = b''
+    def test_add_user_action(self, _choice, _NTFile, subprocess):
+        subprocess.check_output.return_value = b'Byte String'
         _NTFile.return_value.__enter__.return_value.name = 'tempfilename'
         _choice.return_value = 'r'
         self.harness.begin()
@@ -665,27 +687,31 @@ class TestCephDashboardCharmBase(CharmTestCase):
             'username': 'auser',
             'role': 'administrator'}
         self.harness.charm._add_user_action(action_event)
-        self.subprocess.check_output.assert_called_once_with(
-            ['ceph', 'dashboard', 'ac-user-create', '--enabled',
-             '-i', 'tempfilename', 'auser', 'administrator'])
+        subprocess.check_output.assert_called_once_with(
+            ['ceph', 'dashboard', 'ac-user-create', '--enabled', '-i',
+             'tempfilename', 'auser', 'administrator'],
+            stderr=subprocess.STDOUT
+        )
 
-    def test__delete_user_action(self):
-        self.subprocess.check_output.return_value = b''
+    @patch('ceph_dashboard_commands.subprocess')
+    def test__delete_user_action(self, subprocess):
+        subprocess.check_output.return_value = b''
         self.harness.begin()
         action_event = MagicMock()
         action_event.params = {
             'username': 'auser'}
         self.harness.charm._delete_user_action(action_event)
-        self.subprocess.check_output.assert_called_once_with(
+        subprocess.check_output.assert_called_once_with(
             ['ceph', 'dashboard', 'ac-user-delete', 'auser'],
-            stderr=self.subprocess.STDOUT)
+            stderr=subprocess.STDOUT)
 
-    def test_saml(self):
-        self.subprocess.check_output.return_value = b''
+    @patch('ceph_dashboard_commands.subprocess')
+    def test_saml(self, subprocess):
+        subprocess.check_output.return_value = b''
         self.harness.begin()
         self.harness.charm.PACKAGES.append('python3-onelogin-saml2')
         self.harness.charm._configure_saml()
-        self.subprocess.check_output.assert_not_called()
+        subprocess.check_output.assert_not_called()
 
         base_url = 'https://saml-base'
         idp_meta = 'file://idp.xml'
@@ -701,8 +727,9 @@ class TestCephDashboardCharmBase(CharmTestCase):
             }
         )
 
+        self.harness.set_leader()
         self.harness.charm._configure_saml()
-        self.subprocess.check_output.assert_called_with(
+        subprocess.check_output.assert_called_with(
             ['ceph', 'dashboard', 'sso', 'setup', 'saml2',
              base_url, idp_meta, username_attr, entity_id],
             stderr=ANY
