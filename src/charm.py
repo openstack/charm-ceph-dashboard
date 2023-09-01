@@ -370,7 +370,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                     ),
                 )
 
-    def _configure_dashboard(self, event) -> None:
+    def _configure_dashboard(self, _event) -> None:
         """Configure dashboard"""
         if not self.mon.mons_ready:
             logging.info("Not configuring dashboard, mons not ready")
@@ -726,8 +726,15 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
         self._configure_tls(key, cert, ca_cert, self.TLS_VAULT_CA_CERT_PATH)
 
     # Custom SSL Event Handles
-    def _enable_ssl_from_config(self, _event) -> None:
+    def _enable_ssl_from_config(self, event) -> None:
         """Configure Ceph Dashboard SSL with available key/cert from charm."""
+        if not ceph_utils.is_dashboard_enabled():
+            if self.unit.is_leader():
+                ceph_utils.mgr_enable_dashboard()
+            else:
+                event.defer()
+                return
+
         if all([
             cmds.check_ceph_dashboard_ssl_configured(),
             cmds.check_ceph_dashboard_ssl_configured(is_check_host_key=True)
@@ -740,6 +747,13 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
     # Certificates relation handle.
     def _enable_ssl_from_relation(self, event) -> None:
         """Configure Ceph Dashboard SSL using key/cert from relation."""
+        if not ceph_utils.is_dashboard_enabled():
+            if self.unit.is_leader():
+                ceph_utils.mgr_enable_dashboard()
+            else:
+                event.defer()
+                return
+
         if cmds.check_ceph_dashboard_ssl_configured():
             key, cert, _ = self._get_tls_from_config()
             if self.is_ceph_dashboard_ssl_key_cert_same(key, cert):
