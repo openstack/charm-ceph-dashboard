@@ -14,5 +14,5 @@ tox -e func-smoke
 ```
 
 For full details on functional testing of OpenStack charms please refer to
-the [functional testing](https://docs.openstack.org/charm-guide/latest/reference/testing.html#functional-testing)
+the [testing](https://docs.openstack.org/charm-guide/latest/community/software-contrib/testing.html) 
 section of the OpenStack Charm Guide.
