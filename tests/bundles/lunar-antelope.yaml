@@ -24,7 +24,8 @@ applications:
   vault:
     num_units: 1
     charm: ch:vault
-    channel: latest/edge
+    channel: 1.8/stable
+    series: jammy
   mysql-innodb-cluster:
     charm: ch:mysql-innodb-cluster
     constraints: mem=3072M
@@ -34,7 +35,8 @@ applications:
     channel: 8.0/edge
   vault-mysql-router:
     charm: ch:mysql-router
-    channel: 8.0/edge
+    channel: latest/edge
+    series: jammy
   ceph-dashboard:
     charm: ../../ceph-dashboard.charm
     options:
