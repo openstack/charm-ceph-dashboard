@@ -370,17 +370,32 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                     ),
                 )
 
-    def _configure_dashboard(self, _event) -> None:
+    def _configure_dashboard(self, event) -> None:
         """Configure dashboard"""
         if not self.mon.mons_ready:
             logging.info("Not configuring dashboard, mons not ready")
             return
 
-        if not ceph_utils.is_dashboard_enabled():
+        if ceph_utils.is_dashboard_enabled():
+            if not self.unit.is_leader():
+                # leader already enabled the dashboard and also handles config,
+                # we don't need to do anything except set ourselves as ready
+                logging.debug("Dashboard already enabled, setting ready.")
+                self._stored.is_started = True
+                self.update_status()
+                return
+        else:
             if self.unit.is_leader():
+                # we're the leader, enable dashboard and continue
+                # configuration below
+                logging.debug("Enabling dashboard as leader.")
                 ceph_utils.mgr_enable_dashboard()
             else:
-                logging.info("Dashboard not enabled, deferring event.")
+                # non-leader, defer event until leader has enabled and
+                # configured the dashboard
+                logging.info("Dashboard not enabled, deferring event on "
+                             "non-leader")
+                event.defer()
                 return
 
         if self.unit.is_leader():
@@ -743,6 +758,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             return
 
         self._configure_tls_from_charm_config()
+        self.update_status()
 
     # Certificates relation handle.
     def _enable_ssl_from_relation(self, event) -> None:
@@ -763,6 +779,7 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                 return  # SSL is already configured.
 
         self._configure_tls_from_relation()
+        self.update_status()
 
 
 if __name__ == "__main__":
