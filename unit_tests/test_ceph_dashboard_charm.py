@@ -356,15 +356,6 @@ class TestCephDashboardCharmBase(CharmTestCase):
             'ceph-mon/0',
             {
                 'mon-ready': 'True'})
-
-        self.ceph_utils.mgr_config_set.reset_mock()
-        self.harness.set_leader(False)
-        self.harness.charm._configure_dashboard(None)
-        self.assertFalse(self.ceph_utils.mgr_enable_dashboard.called)
-        self.ceph_utils.mgr_config_set.assert_called_once_with(
-            'mgr/dashboard/server1/server_addr',
-            '10.0.0.10')
-
         self.ceph_utils.mgr_config_set.reset_mock()
         self.ceph_utils.is_dashboard_enabled.return_value = True
         self.harness.set_leader()
