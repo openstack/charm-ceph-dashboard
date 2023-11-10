@@ -176,9 +176,20 @@ The OpenStack Charms project maintains two documentation guides:
   and support notes
 * [OpenStack Charms Deployment Guide][cdg]: for charm usage information
 
+# Contributing
+
+Please see the [OpenStack Charm Guide community section][cgc] for contribution guidelines. Specifically, see the [software contributions section][swc] for software contribution guidelines, and the [documentation contributions section][docc] for guidelines on documentation contribution.
+
+
 # Bugs
 
-Please report bugs on [Launchpad][lp-bugs-charm-ceph-dashboard].
+Please report bugs on [Launchpad][lp-bugs-charm-ceph-dashboard]. Note the [bug submission section][bugc] on guidelines for reporting bugs.
+
+
+# License
+
+The ceph-dashboard charm is free software, distributed under the Apache 2.0 software licence. See the LICENSE file for more information.
+
 
 <!-- LINKS -->
 
@@ -188,6 +199,10 @@ Please report bugs on [Launchpad][lp-bugs-charm-ceph-dashboard].
 [cg]: https://docs.openstack.org/charm-guide
 [cdg]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide
 [cdg-tls]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/app-certificate-management.html
+[cgc]: https://docs.openstack.org/charm-guide/latest/community/
+[swc]: https://docs.openstack.org/charm-guide/latest/community/software-contrib/
+[docc]: https://docs.openstack.org/charm-guide/latest/community/doc-contrib/
+[bugc]: https://docs.openstack.org/charm-guide/latest/community/software-bug.html
 [lp-bugs-charm-ceph-dashboard]: https://bugs.launchpad.net/charm-ceph-dashboard
 [anchor-grafana-dashboards]: #embedded-grafana-dashboards
 [loadbalancer-charm]: https://jaas.ai/u/openstack-charmers/openstack-loadbalancer
