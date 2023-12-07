@@ -5,8 +5,6 @@ a built-in web-based Ceph management and monitoring application. It works in
 conjunction with the [openstack-loadbalancer][loadbalancer-charm] charm, which
 in turn utilises the [hacluster][hacluster-charm] charm.
 
-> **Note**: The ceph-dashboard charm is currently in tech-preview.
-
 # Usage
 
 ## Configuration
