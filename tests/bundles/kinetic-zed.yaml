@@ -73,7 +73,8 @@ applications:
       source: *source
   ceph-iscsi:
     charm: ch:ceph-iscsi
-    series: kinetic
+    # ceph-iscsi is deprecated therefore using older series.
+    series: jammy
     num_units: 2
     options:
       source: *source

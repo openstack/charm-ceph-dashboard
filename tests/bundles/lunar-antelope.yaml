@@ -51,6 +51,7 @@ applications:
     charm: ch:grafana
     num_units: 1
     series: focal
+    channel: latest/stable
     options:
       anonymous: True
       install_method: snap

@@ -18,7 +18,6 @@ import tempfile
 from pathlib import Path
 from typing import List, Tuple, Union
 
-import charmhelpers.core.host as ch_host
 import charms_ceph.utils as ceph_utils
 import cryptography.hazmat.primitives.serialization as serialization
 import interface_ceph_iscsi_admin_access.admin_access as admin_access
@@ -180,29 +179,15 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             logging.debug(
                 "register_grafana_dashboard: {}".format(dash_file))
 
-    def _update_legacy_radosgw_creds(self, access_key: str,
-                                     secret_key: str) -> None:
+    def _update_radosgw_creds(
+        self, access_key: str, secret_key: str
+    ) -> None:
         """Update dashboard db with access & secret key for rados gateways.
 
         This method uses the legacy format which only supports one gateway.
         """
         self._apply_file_setting('set-rgw-api-access-key', access_key)
         self._apply_file_setting('set-rgw-api-secret-key', secret_key)
-
-    def _update_multi_radosgw_creds(self, creds: str) -> None:
-        """Update dashboard db with access & secret key for rados gateway."""
-        access_keys = {c['daemon_id']: c['access_key'] for c in creds}
-        secret_keys = {c['daemon_id']: c['secret_key'] for c in creds}
-        self._apply_file_setting(
-            'set-rgw-api-access-key',
-            json.dumps(access_keys))
-        self._apply_file_setting(
-            'set-rgw-api-secret-key',
-            json.dumps(secret_keys))
-
-    def _support_multiple_gateways(self) -> bool:
-        """Check if version of dashboard supports multiple rados gateways"""
-        return ch_host.cmp_pkgrevno('ceph-common', '16.0') > 0
 
     def _manage_radosgw(self) -> None:
         """Register rados gateways in dashboard db"""
@@ -214,18 +199,14 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
             if cred_count < 1:
                 logging.info("No object gateway creds found")
                 return
-            if self._support_multiple_gateways():
-                self._update_multi_radosgw_creds(creds)
-            else:
-                if cred_count > 1:
-                    logging.error(
-                        "Cannot enable object gateway support. Ceph release "
-                        "does not support multiple object gateways in the "
-                        "dashboard")
-                else:
-                    self._update_legacy_radosgw_creds(
-                        creds[0]['access_key'],
-                        creds[0]['secret_key'])
+            # Update the provided creds for radosgw.
+            # NOTE(utkarshbhatthere): Having multiple credentials is not
+            # required even where there are multiple radosgw applications
+            # in the juju model. Therefore, first available creds are
+            # populated in dashboard.
+            self._update_radosgw_creds(
+                creds[0]['access_key'],
+                creds[0]['secret_key'])
 
     def _request_certificates(self, event) -> None:
         """Request TLS certificates."""
