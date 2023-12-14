@@ -65,7 +65,8 @@ applications:
     channel: latest/edge
   ceph-iscsi:
     charm: ch:ceph-iscsi
-    series: mantic
+    # ceph-iscsi is deprecated therefore using older series.
+    series: jammy
     num_units: 2
     options:
       gateway-metadata-pool: iscsi-foo-metadata

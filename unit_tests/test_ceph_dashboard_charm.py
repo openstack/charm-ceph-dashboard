@@ -162,10 +162,8 @@ class TestCephDashboardCharmBase(CharmTestCase):
 
     PATCHES = [
         'ceph_utils',
-        'ch_host',
         'socket',
         'subprocess',  # charm's subprocess import
-        'ch_host',
     ]
 
     def setUp(self):
@@ -515,7 +513,6 @@ class TestCephDashboardCharmBase(CharmTestCase):
     @patch('ceph_dashboard_commands.subprocess')
     def test_rados_gateway(self, subprocess):
         self.ceph_utils.is_dashboard_enabled.return_value = True
-        self.ch_host.cmp_pkgrevno.return_value = 1
         mon_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
         rel_id = self.harness.add_relation('radosgw-dashboard', 'ceph-radosgw')
         self.harness.begin()
@@ -563,7 +560,6 @@ class TestCephDashboardCharmBase(CharmTestCase):
     @patch('ceph_dashboard_commands.subprocess')
     def test_rados_gateway_multi_relations_pacific(self, subprocess):
         self.ceph_utils.is_dashboard_enabled.return_value = True
-        self.ch_host.cmp_pkgrevno.return_value = 1
         rel_id1 = self.harness.add_relation('radosgw-dashboard', 'ceph-eu')
         rel_id2 = self.harness.add_relation('radosgw-dashboard', 'ceph-us')
         mon_rel_id = self.harness.add_relation('dashboard', 'ceph-mon')
@@ -619,7 +615,6 @@ class TestCephDashboardCharmBase(CharmTestCase):
 
     @patch('ceph_dashboard_commands.subprocess')
     def test_rados_gateway_multi_relations_octopus(self, subprocess):
-        self.ch_host.cmp_pkgrevno.return_value = -1
         rel_id1 = self.harness.add_relation('radosgw-dashboard', 'ceph-eu')
         rel_id2 = self.harness.add_relation('radosgw-dashboard', 'ceph-us')
         self.harness.begin()
