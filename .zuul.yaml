@@ -2,3 +2,6 @@
     templates:
       - openstack-python3-charm-yoga-jobs
       - openstack-cover-jobs
+    vars:
+      juju_channel: 2.9/stable
+
