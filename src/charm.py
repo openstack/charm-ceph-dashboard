@@ -569,6 +569,10 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
 
     def _configure_tls(self, key, cert, ca_cert, ca_cert_path) -> None:
         """Configure TLS using provided credentials"""
+        is_valid, msg = cmds.validate_ssl_keypair(cert, key)
+        if not is_valid:
+            logging.error("Invalid SSL key/cert: %s", msg)
+            return
         self.TLS_KEY_PATH.write_bytes(key)
         self.TLS_CERT_PATH.write_bytes(cert)
         if ca_cert:
@@ -697,6 +701,12 @@ class CephDashboardCharm(ops_openstack.core.OSBaseCharm):
                 "config is ignored. Remove conflicting source to proceed."
             )
 
+        # Check for ssl material validity.
+        is_valid, msg = cmds.validate_ssl_keypair(cert, key)
+        if not is_valid:
+            return BlockedStatus(
+                "Invalid SSL key/cert: {}".format(msg)
+            )
         return BlockedStatus("Unknown SSL source.")
 
     def _configure_tls_from_charm_config(self) -> None:

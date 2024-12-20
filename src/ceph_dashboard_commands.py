@@ -5,8 +5,10 @@
 # Learn more at: https://juju.is/docs/sdk
 
 import json
+import os
 import socket
-from typing import List
+import tempfile
+from typing import List, Tuple
 from functools import partial
 
 import subprocess
@@ -150,3 +152,70 @@ def check_ceph_dashboard_ssl_configured(
             return False
 
     return True
+
+
+def validate_ssl_keypair(cert: bytes, key: bytes) -> Tuple[bool, str]:
+    """Validates if a private key matches a certificate
+
+    Args:
+        cert, key (str): SSL material
+
+    Returns:
+        Tuple[bool, str]: bool for validaity and err message
+    """
+    try:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as cert_temp:
+            cert_temp.write(cert)
+            cert_path = cert_temp.name
+
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as key_temp:
+            key_temp.write(key)
+            key_path = key_temp.name
+    except IOError as e:
+        return False, f"Failed to create temporary files: {str(e)}"
+
+    try:
+        # check if pubkeys from cert and key match
+        try:
+            cert_pubkey_cmd = subprocess.run(
+                ["openssl", "x509", "-in", cert_path, "-noout", "-pubkey"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            cert_pubkey = cert_pubkey_cmd.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            return (
+                False,
+                f"Failed to extract pubkey from cert: {e.stderr.strip()}",
+            )
+
+        try:
+            key_pubkey_cmd = subprocess.run(
+                ["openssl", "rsa", "-in", key_path, "-pubout"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            key_pubkey = key_pubkey_cmd.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            return (
+                False,
+                f"Failed to extract pubkey from priv key: {e.stderr.strip()}",
+            )
+
+        if cert_pubkey != key_pubkey:
+            return False, "Certificate and private key do not match"
+
+        return (
+            True,
+            "Certificate and private key match and certificate is valid",
+        )
+
+    finally:
+        # Best effort clean up
+        try:
+            os.unlink(cert_path)
+            os.unlink(key_path)
+        except Exception:
+            pass
